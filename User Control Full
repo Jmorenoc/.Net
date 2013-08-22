@@ -1,0 +1,119 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace ControlFI.Web.Formularios.UserControls
+{
+    public partial class ComboBox : System.Web.UI.UserControl
+    {
+        public event EventHandler SelectedIndexChanged;
+        private bool Normalizar;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            ListaItems.Rows = 6;
+            Normalizar = false;
+            ListaItems.Visible = true;
+        }
+
+        public void CargaLista(DataTable Datos, string Campo)
+        {
+            ListaItems.DataSource = Datos;
+            ListaItems.DataTextField = Campo;            
+            ListaItems.DataBind();
+            ListaItems_DataBound();
+        }
+        
+        public void CargaLista(DataTable Datos, string Campo, string Valor )
+        {
+            ListaItems.DataSource = Datos;
+            ListaItems.DataTextField = Campo;
+            ListaItems.DataValueField = Valor;
+            ListaItems.DataBind();
+            ListaItems_DataBound();
+        }
+
+        public void CargaLista(Dictionary<int, string> Datos, string Campo, string Valor)
+        {
+            // Revisar posible error
+            ListaItems.DataSource = Datos;
+            ListaItems.DataTextField = Campo;
+            ListaItems.DataValueField = Valor;
+            ListaItems.DataBind();
+            ListaItems_DataBound();
+        }
+
+        public void MarcarAnterior(int indice, System.Drawing.Color color)
+        {
+            ListaItems.Items[indice].Attributes.Add("style", "background-color:" + color);
+        }
+
+        public void Deshabilitar()
+        {
+            TextBox1.Enabled = false;
+            DdeCombo.Enabled = false;
+            ItemsDiv.Visible = false;
+        }
+
+        public void Habilitar()
+        {
+            TextBox1.Enabled = true;
+            DdeCombo.Enabled = true;
+            ItemsDiv.Visible = true;
+        }
+
+        protected void ListaItems_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            EventHandler handler = SelectedIndexChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        public string DefaultText
+        {
+            get { return TextBox1.Text; }
+            set { TextBox1.Text = value; }
+        }
+
+        public object SelectedItem
+        {
+            get { return ListaItems.SelectedItem.Value; }            
+        }
+
+        public int SelectedIndex
+        {
+            get { return ListaItems.SelectedIndex; }
+            set { ListaItems.SelectedIndex = value; }
+        }
+
+        public string SelectedValue
+        {
+            get { return ListaItems.SelectedValue; }            
+        }
+
+        public int ShowItems
+        {
+            get { return ListaItems.Rows; }
+            set { ListaItems.Rows = value; }
+        }
+
+        public bool NormalizarTexto
+        {
+            set { Normalizar = value; }
+        }
+
+        protected void ListaItems_DataBound()
+        {
+            if (Normalizar)
+            { 
+                foreach (ListItem item in ListaItems.Items)
+                {
+                    item.Text = Utiles.Utiles.UppercaseFirst(item.Text);
+                }
+            }
+        }        
+    }
+}
