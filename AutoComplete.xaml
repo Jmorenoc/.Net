@@ -1,0 +1,21 @@
+
+<script type="text/javascript">
+	function AsignaValor(sender, event) 
+	{
+		document.getElementById("<%=TxtValor.ClientID %>").value = event.get_value();
+		document.getElementById("<%=BtnBusqueda.ClientID %>").click();
+	}
+</script>
+
+<div>
+<asp:TextBox ID="TxtBusqueda" runat="server" CssClass="TextBoxBusqueda" 
+	ontextchanged="TxtBusqueda_TextChanged" />
+<asp:AutoCompleteExtender ID="AutoCompleteCliente" runat="server" 
+	TargetControlID="TxtBusqueda" EnableCaching="true"
+	CompletionSetCount="1" CompletionInterval="200"
+	ServiceMethod="CargarClientes" UseContextKey="True"
+	OnClientItemSelected="AsignaValor" FirstRowSelected="true" />
+<asp:TextBox ID="TxtValor" runat="server" Text="" 
+	ontextchanged="TxtValor_TextChanged" style="display:none" />
+<asp:Button ID="BtnBusqueda" runat="server" Text="" OnClick="BtnBusqueda_Click" />                
+</div>
