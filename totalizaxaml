@@ -1,0 +1,92 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Totalizador.aspx.cs" Inherits="ControlFI.Web.Formularios.Modulos.Totalizador" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server">
+    <script type="text/javascript">
+//        function pageLoad() {
+//            var mpe = $find("MPE");
+//            mpe.add_shown(onShown);
+//        }
+
+//        function onShown() {
+//            var background = $find("MPE")._backgroundElement;
+//            background.onclick = function () { $find("MPE").hide(); }
+//        }        
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+    
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SitemapPath1" runat="server" />
+    </div>
+
+    <hr />
+
+    <%--<div class="Centrado" style="width:80%; height:40px;">
+        <asp:Label ID="LblCliente" runat="server" Text="Cliente" />
+        <asp:TextBox ID="TxtCliente" runat="server" CssClass="busqueda" />
+        <asp:ImageButton ID="BtnCliente" runat="server" ImageUrl="~/Graficos/Icons/Spotlight Blue Button.png" />
+    </div>--%>
+    
+    <div class="Centrado MargenBase">
+        <asp:Panel runat="server" CssClass="Centrado" Width="50%" height="30%">
+            <asp:GridView ID="GrvTotaliza" runat="server" CssClass="GrillaBase" AutoGenerateColumns="false"><AlternatingRowStyle CssClass="GrillaBaseAlternada" />
+                <Columns>
+            
+                <asp:TemplateField HeaderText="Moneda">
+                    <ItemTemplate>
+                        <asp:Label ID="LblMoneda" runat="server" Text='<%# Bind("Moneda") %>' />
+                    </ItemTemplate>
+                </asp:TemplateField>
+
+                <asp:TemplateField HeaderText="Nominal" ItemStyle-HorizontalAlign="Right">
+                    <ItemTemplate>
+                        <asp:Label ID="LblTotal" runat="server" Text='<%# Bind("Nominal") %>' />
+                    </ItemTemplate>
+                </asp:TemplateField>
+
+                <asp:TemplateField HeaderText="TotalCLP" ItemStyle-HorizontalAlign="Right">
+                    <ItemTemplate>
+                        <asp:Label ID="LblTotalCLP" runat="server" Text='<%# Bind("TotalCLP") %>' />
+                    </ItemTemplate>
+                </asp:TemplateField>
+
+                </Columns>
+            </asp:GridView>
+        </asp:Panel>
+    </div>
+
+    <div>
+       <%-- <asp:Button ID="BtnFiltroMoneda" runat="server" Text="Filtrar Moneda" />
+        <asp:Panel ID="PnlFiltroMoneda" runat="server" CssClass="Borde Centrado" BackColor="White" Width="233px" Height="230px">
+            <div class="MargenMenor Centrado">
+                <div class="Headers Centrado">
+                    <asp:Label ID="LblControles" runat="server" Text="Controles" style="vertical-align:middle" />
+                </div>            
+                <div class="MargenSuperior Centrado" style="display:inline-block;">
+                    <asp:Panel ID="PanelControles" CssClass="Centrado Borde" runat="server" Height="120px" Width="200px" ScrollBars="Auto" >
+                        <asp:CheckBoxList ID="ListaControles" CssClass="ListaBox" runat="server" Height="95px" Width="100%" />
+                    </asp:Panel>
+                </div>
+                <div class="MargenSuperior">
+                    <div style="display:inline-block" class="Derecha">
+                        <asp:Button ID="BtnAgregar" runat="server" Text="Agregar" CssClass="Accion" 
+                            onclick="BtnAgregar_Click" />
+                    </div>
+                </div>
+            </div>
+        </asp:Panel>
+        <asp:ModalPopupExtender ID="PupFiltroMoneda" runat="server" 
+            PopupControlID="PnlFiltroMoneda" TargetControlID="BtnFiltroMoneda" 
+            BackgroundCssClass="modal" BehaviorID="MPE" />--%>
+    </div>
+
+    <div>
+        <%--<asp:Panel ID="PnlFiltroConceptos" runat="server">
+        </asp:Panel>
+        <asp:ModalPopupExtender ID="PupFultroConcepto" runat="server" PopupControlID="PnlFiltroConceptos"></asp:ModalPopupExtender>--%>
+    </div>
+
+
+</asp:Content>
