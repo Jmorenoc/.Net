@@ -1,0 +1,65 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data;
+using Corp.Entidades.Clases;
+using Corp.Entidades.Clases.Transaccion;
+using Corp.Datos.Clases;
+
+namespace Corp.Negocio
+{   
+    public class GestorLimites
+    {
+        #region parametros
+
+        private eOperador Operador;
+
+        #endregion
+
+        #region Constructores
+
+        public GestorLimites() {}
+
+        #endregion
+        
+        public Dictionary<string, string> Carga_Operadores()
+        {
+            List<cf_Usuario> ListaOperadores = new List<cf_Usuario>();
+            ListaOperadores = InstanceOF.Obtener_Objeto(string.Format("select Id, NombreUsuario from Usuario"), typeof(cf_Usuario)) ?? new List<cf_Usuario>();
+                        
+            Dictionary<string, string> nombres = new Dictionary<string, string>();
+
+            foreach (cf_Usuario usuario in ListaOperadores)
+            {
+                nombres.Add(usuario.NombreUsuario.TrimEnd(), usuario.Id.ToString());            
+            }
+            return nombres;
+        }
+
+        public static DataTable Obtener_Operadores()
+        {
+            return eOperador.OPerador_Obtener();
+        }
+
+        public DataTable Operador_Limites()
+        {
+            return null;
+        }
+
+        public DataTable Operador_Atribuciones(int id)
+        {
+            Operador = new eOperador();
+            Operador.id = id;
+            return Operador.Operador_Atribuciones_Obtener();
+        }
+
+        public DataTable Operador_Limites(int id)
+        {
+            Operador = new eOperador();
+            Operador.id = id;
+            return Operador.Operador_Obtener_Limite();
+        }
+
+    }
+}
