@@ -1,0 +1,88 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace ControlFI.Web
+{
+    public partial class SiteMaster : System.Web.UI.MasterPage
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if(Session["usr"] != null)
+            {
+                //BtnUsuario.Visible = true;
+                //BtnUsr.Visible = true;
+                //BtnUsuario.Text = this.Session["usuario"].ToString();
+                //BtnUsuario.ToolTip = this.Session["NombreUsuario"].ToString() + " (" + this.Session["tipousuario"] + ")";
+                //MnuUsuario.Items[0].Text = this.Session["usuario"].ToString();
+
+                //lblUsuario.Text = Session["NombreUsuario"].ToString() + "  ( " +   Session["tipousuario"]    + " )";
+                //hlCerrar.Visible = true;
+                //CargarMenu(Session["Usuario"].ToString());
+                Area.Style["visibility"] = "visible";
+
+            }
+            else
+            {
+                if (((System.Web.UI.TemplateControl)(Page)).AppRelativeVirtualPath != "~/Login.aspx")
+                {
+                    Response.Redirect("Login.aspx");
+                }                
+            }            
+        }
+
+        //private void CargarMenu(string usuario)
+        //{  
+        //    NavigationMenu.Visible = true;                                   
+
+        //    var menu_old = mnt.MenuPorUsuarioListar(usuario);            
+            
+        //    var menu = mnt.MenuPerfilBac(usuario);            
+
+        //    MenuItem mi0 = new MenuItem();
+        //    MenuItem mi1 = new MenuItem();
+        //    MenuItem mi4 = new MenuItem();
+
+        //    string paso = "no";
+        //    foreach (var dtoMenuPerfil in menu)
+        //    {
+        //        if (dtoMenuPerfil.nivel == "0")
+        //        {
+        //            if (paso == "ok")
+        //            {
+        //                NavigationMenu.Items.Add(mi0);
+        //                paso = "";
+        //            }
+        //            mi0 = new MenuItem();
+        //            mi0.NavigateUrl = dtoMenuPerfil.url;
+        //            mi0.Text = dtoMenuPerfil.opcion_menu;
+                    
+        //        }
+        //        if (dtoMenuPerfil.nivel == "1")
+        //        {
+        //            mi1 = new MenuItem();
+        //            mi1.NavigateUrl = dtoMenuPerfil.url;
+        //            mi1.Text = dtoMenuPerfil.opcion_menu;
+        //            mi0.ChildItems.Add(mi1);
+        //            paso = "ok";
+
+        //        }
+        //        if (dtoMenuPerfil.nivel == "2")
+        //        {
+        //            MenuItem mi2 = new MenuItem();
+        //            mi2.NavigateUrl = dtoMenuPerfil.url;
+        //            mi2.Text = dtoMenuPerfil.opcion_menu;
+        //            mi1.ChildItems.Add(mi2);
+        //            paso = "ok";
+        //        }
+                
+        //    }
+        //    NavigationMenu.Items.Add(mi0);
+        //}
+    }
+}
+
+
