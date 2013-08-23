@@ -1,0 +1,338 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Corp.Negocio;
+using System.Data;
+using System.Drawing;
+
+namespace ControlFI.Web.Mantenedores
+{
+    public partial class Conceptos : System.Web.UI.Page
+    {
+        GestorMantenedores gestor;
+        private bool admin;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            gestor = new GestorMantenedores();
+            if (!Page.IsPostBack)
+            {
+                ListaConceptos.EditIndex = -1;
+                this.Session["dt"] = null;
+                admin = true;
+                BindGrid();
+            }
+        }
+
+        #region Inicializar
+
+        protected DataTable CargaConceptos()
+        {
+            int Entidad = Convert.ToInt16(this.Session["Entidad"]);
+            DataTable conceptos = gestor.Lista_Concepto(Entidad);
+            conceptos.Columns[2].ColumnName = "Descripcion";
+            conceptos.Columns[4].ColumnName = "Control";
+            conceptos.Columns[3].ColumnName = "Plazo";
+
+            conceptos.Columns.Add("Estado", typeof(int));                        
+            conceptos.Columns[5].DefaultValue = 0;
+            foreach (DataRow dr in conceptos.Rows)
+            {
+                dr["Estado"] = 0;
+            }
+            ExistenDatos(conceptos);
+            return conceptos;
+        }
+
+        private void BindGrid()
+        {
+            if (Session["dt"] == null)
+            {
+                ListaConceptos.DataSource = CargaConceptos();
+                this.Session["dt"] = ListaConceptos.DataSource;
+                ListaConceptos.DataBind();
+            }
+            else
+            {
+                ListaConceptos.DataSource = Session["dt"] as DataTable;
+                ListaConceptos.DataBind();
+            }            
+        }       
+
+        protected void ListaConceptos_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            if (ListaConceptos.EditIndex != -1)
+            {                
+                e.Cancel = true;
+                int newPageNumber = e.NewPageIndex + 1;                                
+            }
+            else
+            {                
+                ListaConceptos.PageIndex = e.NewPageIndex;
+                BindGrid();
+            }
+        }
+
+        protected void ListaConceptos_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow && e.Row.RowState != DataControlRowState.Edit) // || e.Row.RowType == DataControlRowType.Header)
+            {
+                DataRowView rowview = (DataRowView)e.Row.DataItem;
+                Label NombreLabel = (Label)e.Row.FindControl("LabelDesc");
+                Label ControlLabel = (Label)e.Row.FindControl("LabelControl");
+                Label PlazoLabel = (Label)e.Row.FindControl("LabelPlazo");               
+
+                if (NombreLabel != null)
+                {
+                    NombreLabel.Text = Utiles.Utiles.UppercaseFirst(NombreLabel.Text);
+                }
+
+                int control = Convert.ToInt32(rowview["Control"]);
+                if (ControlLabel != null)
+                {
+                    if (control == 0)
+                    {
+                        ControlLabel.Text = "Línea";
+                    }
+                    else
+                    {
+                        if (control == 1)
+                        {
+                            ControlLabel.Text = "Límite";
+                        }
+                    }
+                }
+
+                int plazo = Convert.ToInt32(rowview["Plazo"]);
+                if (PlazoLabel != null)
+                {
+                    if (plazo == 0)
+                    {
+                        PlazoLabel.Text = "No";
+                    }
+                    else
+                    {
+                        if (plazo == 1)
+                        {
+                            PlazoLabel.Text = "Si";
+                        }
+                    }
+                }
+
+                int estado = Convert.ToInt32(rowview["Estado"]);
+                if (estado != 0)
+                {
+                    IdentificaEstado(estado, e);
+                }
+            }
+        }
+
+        private void IdentificaEstado(int estado, GridViewRowEventArgs e)
+        {            
+            switch (estado)
+            {
+                // Borrar
+                case -1: { e.Row.BackColor = Color.OrangeRed; break; }
+                // Crear
+                case 1: { e.Row.BackColor = Color.LightGreen; break; }
+                // Modificar
+                case 2: { e.Row.BackColor = Color.LightBlue; break; }
+
+                default: { break; }
+            }
+        }
+
+        #endregion
+        
+        #region Maniputacion Datos
+
+        protected void CrearConcepto_Click(object sender, ImageClickEventArgs e)
+        {
+            int pagina = ListaConceptos.PageCount;
+            int Entidad = Convert.ToInt16(this.Session["Entidad"]);
+            BindGrid();
+            DataTable dt = ListaConceptos.DataSource as DataTable;
+
+            string[] datosbase = new string[6];
+            datosbase[0] = "0";
+            datosbase[1] = Entidad.ToString();
+            datosbase[2] = "Nombre Concepto";
+            datosbase[3] = "0";
+            datosbase[4] = "0";
+            datosbase[5] = "1";
+            
+            DataRow dr = dt.DefaultView.Table.NewRow();
+            dr.ItemArray = datosbase;
+            dr.BeginEdit();
+            dt.Rows.InsertAt(dr, dt.Rows.Count);            
+            this.Session["dt"] = dt;
+
+            ListaConceptos.PageIndex = pagina;
+            BindGrid();
+        }
+
+        protected void ListaConceptos_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            ListaConceptos.EditIndex = e.NewEditIndex;
+            int indice = ListaConceptos.EditIndex;
+            BindGrid();
+
+            DataTable dt = ListaConceptos.DataSource as DataTable;
+            GridViewRow dr = ListaConceptos.Rows[indice];
+
+            DropDownList combo = ListaConceptos.Rows[e.NewEditIndex].FindControl("DropDownControl") as DropDownList;
+
+            string[] datos = new string[2];
+            datos[0] = "Línea";
+            datos[1] = "Límite";
+
+            if (combo != null)
+            {
+                combo.DataSource = datos;
+                combo.DataBind();
+            }
+
+            int value = Convert.ToInt32(dt.Rows[indice]["Control"]);
+            combo.SelectedIndex = value;           
+
+            CheckBox check = ListaConceptos.Rows[e.NewEditIndex].FindControl("CheckPlazo") as CheckBox;
+            check.Checked = Convert.ToBoolean(dt.Rows[indice]["Plazo"]);
+        }
+
+        protected void ListaConceptos_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            ListaConceptos.EditIndex = -1;
+            BindGrid();
+        }
+
+        protected void ListaConceptos_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+            string entrada = Convert.ToString(((TextBox)ListaConceptos.Rows[e.RowIndex].FindControl("TextBoxDesc")).Text);            
+            string tipo = ((DropDownList)ListaConceptos.Rows[e.RowIndex].FindControl("DropDownControl")).Text;
+
+            int indice = ListaConceptos.EditIndex;
+
+            DataTable dt = this.Session["dt"] as DataTable;
+            GridViewRow dr = ListaConceptos.Rows[indice];
+
+            if (Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]) == 0)
+            {
+                dt.Rows[dr.DataItemIndex]["Descripcion"] = Convert.ToString(((TextBox)dr.FindControl("TextBoxDesc")).Text);
+
+                DropDownList combo = ListaConceptos.Rows[indice].FindControl("DropDownControl") as DropDownList;
+                dt.Rows[dr.DataItemIndex]["Control"] = combo.SelectedIndex;
+
+                CheckBox check = ListaConceptos.Rows[indice].FindControl("CheckPlazo") as CheckBox;
+                dt.Rows[dr.DataItemIndex]["Plazo"] = Convert.ToInt32(check.Checked);
+
+                ListaConceptos.EditIndex = -1;
+
+                if (Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]) == 0)
+                    dt.Rows[dr.DataItemIndex]["Estado"] = 2;
+                this.Session["dt"] = dt;
+                BindGrid();
+            }
+            else
+            { 
+                if (!ValidarExistencia(entrada, tipo))
+                {
+                    dt.Rows[dr.DataItemIndex]["Descripcion"] = Convert.ToString(((TextBox)dr.FindControl("TextBoxDesc")).Text);
+
+                    DropDownList combo = ListaConceptos.Rows[indice].FindControl("DropDownControl") as DropDownList;
+                    dt.Rows[dr.DataItemIndex]["Control"] = combo.SelectedIndex;
+
+                    CheckBox check = ListaConceptos.Rows[indice].FindControl("CheckPlazo") as CheckBox;
+                    dt.Rows[dr.DataItemIndex]["Plazo"] = Convert.ToInt32(check.Checked);
+
+                    ListaConceptos.EditIndex = -1;
+
+                    if (Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]) == 0)
+                        dt.Rows[dr.DataItemIndex]["Estado"] = 2;
+                    this.Session["dt"] = dt;
+                    BindGrid();
+                }
+                else
+                {
+                    Alerta.Accion("El nombre del Concepto ya existe");
+                }
+            }
+        }
+
+        protected void ListaConceptos_RowDeleting(object sender, GridViewDeleteEventArgs e)
+        {   
+            DataTable dt = this.Session["dt"] as DataTable;
+            GridViewRow dr = ListaConceptos.Rows[e.RowIndex];
+            if (Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]) != -1)
+                dt.Rows[dr.DataItemIndex]["Estado"] = -1;                
+            this.Session["dt"] = dt;
+            BindGrid();
+        }
+
+        #endregion
+
+        protected void Guardar_Click(object sender, EventArgs e)
+        {
+            BindGrid();
+            DataTable dt = this.Session["dt"] as DataTable;
+            foreach (DataRow fila in dt.Rows)
+            {
+                int estado = Convert.ToInt32(fila["Estado"]);
+                if (estado != 0)
+                {
+                    GuardarDatos(fila, estado);
+                }
+                Alerta.Accion("Cambios guardados exitosamente");
+                this.Session["dt"] = null;
+                BindGrid();
+                // evaluar volver a la pagina 1 y desaparecer el boton guardar
+            }
+        }
+
+        private void GuardarDatos(DataRow fila, int CodigoEstado)
+        {
+            switch (CodigoEstado)
+            {
+                // Borrar
+                case -1: { gestor.Concepto_Eliminar(Convert.ToInt16(fila[0])); break; }
+                // Crear
+                case 1: { gestor.Concepto_Almacenar(fila[2].ToString(), Convert.ToInt16(fila[4]), Convert.ToInt16(fila[3])); break; }
+                // Modificar
+                case 2: { gestor.Concepto_Modificar(Convert.ToInt16(fila[0]), fila[2].ToString(), Convert.ToInt16(fila[4]), Convert.ToInt16(fila[3])); break; }
+                    
+                default: { break; }
+            }
+        }
+
+        private bool ValidarExistencia(string nombre, string tipo)
+        {
+            DataTable datos = this.Session["dt"] as DataTable;
+            DataView vista = datos.Copy().DefaultView;
+            int Control;
+            if (tipo == "Línea")
+                Control = 0;
+            else
+                Control = 1;
+                vista.RowFilter = "Descripcion = '" + nombre + "' and Control = '" + Control + "'"; // agregar el tipo de concepto
+            
+            if (vista.Count > 0)
+                return true;
+            else
+                return false;
+        }
+
+        private void ExistenDatos(DataTable datos)
+        {
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                MvGlobal.ActiveViewIndex = 1;
+            }
+            else
+            {
+                MvGlobal.ActiveViewIndex = 0;
+            }
+        }
+    }
+}
