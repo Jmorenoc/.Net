@@ -1,0 +1,246 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Corp.Negocio;
+using System.Data;
+
+namespace ControlFI.Web.Formularios.Modulos
+{
+    public partial class AsignacionControl : System.Web.UI.Page
+    {
+        private GestorMantenedores Gestor;
+        private Dictionary<int, string> Ctr;
+        private static List<KeyValuePair<string, string>> Clientes;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Gestor = new GestorMantenedores();
+            if (!IsPostBack)
+            {
+                //OpcionPrincipal.SelectedIndex = 0;
+                OpcionSecundaria.SelectedIndex = 0;
+                OpcionSecundaria_SelectedIndexChanged(sender, e);
+                CargarListaControles();
+                Enlazar();
+            }
+        }
+
+        private void Enlazar()
+        {
+            if (this.Session["ClienteLcr"] == null)
+            {
+                Clientes = Gestor.CargarClientes();
+            }
+            else
+            {
+                Clientes = this.Session["ClienteLcr"] as List<KeyValuePair<string, string>>;
+            }
+        }
+
+        private void CargarListaControles()
+        {
+            if (this.Session["Controles"] == null)
+            {
+                Ctr = Gestor.ListaControles();
+                this.Session["Controles"] = Ctr;
+            }
+            else
+            {
+                Ctr = this.Session["Controles"] as Dictionary<int, string>;
+            }
+
+            ExistenDatos(Clientes, Ctr);
+
+            //ListaControles.DataSource = Ctr;
+            //ListaControles.DataTextField = "Value";
+            //ListaControles.DataValueField = "Key";
+            //ListaControles.DataBind();
+        }
+        
+        public void ArmaTabla()
+        {
+            DataTable datos = new DataTable();
+            datos.Columns.Add("Cliente");
+            datos.Columns.Add("Control");
+            datos.Columns.Add("Estado");
+        }
+
+        [System.Web.Services.WebMethod]
+        [System.Web.Script.Services.ScriptMethod]
+        public static string[] CargarClientes(string prefixText, int count)
+        {
+            List<string> Lista_Clientes = new List<string>();
+            var nuevos = Clientes.Where(x => x.Key.ToUpperInvariant().Contains(prefixText.ToUpperInvariant())).Take(5);
+
+            foreach (KeyValuePair<string, string> item in nuevos)
+            {
+                Lista_Clientes.Add(AjaxControlToolkit.AutoCompleteExtender.CreateAutoCompleteItem(item.Key, item.Value));
+            }
+            return Lista_Clientes.ToArray();
+        }
+
+        protected void BtnFiltrar_Click(object sender, EventArgs e)
+        {
+            if (OpcionSecundaria.SelectedIndex == 0)
+            {
+                // Buscar controles asociados al clientelcr
+                if (TxtValor.Text != "")
+                {
+                    int id = Convert.ToInt32(TxtValor.Text);                    
+                    BuscarControles(id);
+                }
+            }
+            else
+            {
+                // Buscar clientes asociados a los controles
+                List<int> items = EleccionControles();
+                if (items.Count > 0)
+                {
+                    BuscarClientes(items);
+                }
+            }
+            DataTable datos = TblControles.DataSource as DataTable;
+            ExistenDatosRespuesta(datos);
+        }
+
+        public void BuscarClientes(List<int> Controles)
+        {
+            List<int> clientes = new List<int>();            
+            List<KeyValuePair<int, int>> lista = Gestor.ListaClientesAsociados(Controles);
+
+            DataTable temp = new DataTable();
+            CargarListaControles();
+
+            temp.Columns.Add("Cliente", typeof(string));
+            temp.Columns.Add("ControlId", typeof(string));
+            temp.Columns.Add("Control", typeof(string));
+
+            foreach (KeyValuePair<int, int> cliente in lista)
+            {
+                string nombre = findCliente(cliente.Value);
+                string control = findCtr(cliente.Key);
+                DataRow dr = temp.NewRow();
+                dr["Cliente"] = nombre;
+                dr["ControlId"] = cliente.Value;
+                dr["Control"] = control;
+                temp.Rows.Add(dr);
+            }
+            TblControles.DataSource = temp;
+            TblControles.DataBind();
+        }
+
+        public void BuscarControles(int ClienteId)
+        {
+            List<int> controles = new List<int>();
+            controles = Gestor.ListaControlesAsociados(ClienteId);
+            
+            DataTable temp = new DataTable();
+            CargarListaControles();
+            
+            temp.Columns.Add("Cliente", typeof(string));
+            temp.Columns.Add("ControlId", typeof(int));
+            temp.Columns.Add("Control", typeof(string));
+            
+            string nombre = findCliente(ClienteId);
+            foreach (int item in controles)
+            {
+                DataRow dr = temp.NewRow();
+                dr["Cliente"] = nombre;
+                dr["ControlId"] = item;
+                dr["Control"] = findCtr(item);
+                temp.Rows.Add(dr);
+            }
+            TblControles.DataSource = temp;
+            TblControles.DataBind();
+        }
+
+        public string findCliente(int id)
+        {   
+            var nombreCliente = Clientes.FirstOrDefault(x => x.Value == id.ToString()).Key;
+            return nombreCliente.Split(',')[0];
+        }
+
+        public string findCtr(int id)
+        {            
+            var nombreCliente = Ctr.FirstOrDefault(x => x.Key == id).Value;
+            return nombreCliente.ToString();
+        }
+
+        protected void BtnAgregar_Click(object sender, EventArgs e)
+        {
+            //IEnumerable<ListItem> selectedItems = ListaControles.Items.Cast<ListItem>().Where(x => x.Selected);
+            List<int> ControlesSeleccionados = new List<int>();
+            string nombres = "";
+            //foreach(ListItem item in selectedItems)
+            //{                
+            //    nombres += item.Text +",";
+            //}
+            Controles.Text = nombres;
+        }
+
+        protected void OpcionSecundaria_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (OpcionSecundaria.SelectedIndex == 0)
+            {
+                NombreCliente.Enabled   = true;
+                Controles.Enabled       = false;
+                BtnControles.Enabled    = false;
+                BtnControles.ImageUrl   = "~/Graficos/Icons/Spotlight Blue Button_OFF.png";
+                Controles.Text          = "";
+                //ListaControles.ClearSelection();
+            }
+            else
+            {
+                NombreCliente.Enabled   = false;
+                Controles.Enabled       = true;
+                BtnControles.Enabled    = true;
+                BtnControles.ImageUrl   = "~/Graficos/Icons/Spotlight Blue Button.png";
+                NombreCliente.Text      = "";
+                TxtValor.Text           = "";
+            }
+        }
+
+        public List<int> EleccionControles()
+        {
+            //IEnumerable<ListItem> selectedItems = ListaControles.Items.Cast<ListItem>().Where(x => x.Selected);
+            List<int> ControlesSeleccionados = new List<int>();
+            //foreach (ListItem item in selectedItems)
+            //{
+            //    ControlesSeleccionados.Add(Convert.ToInt32(item.Value));
+            //}
+            return ControlesSeleccionados;
+        }
+
+        protected void BtnAgregar_Click1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ExistenDatos(List<KeyValuePair<string, string>> datos, Dictionary<int, string> controles)
+        {
+            if (datos == null || datos.Count == 0 || controles == null || controles.Count == 0)
+            {
+                MvPagina.ActiveViewIndex = 1;
+            }
+            else
+            {
+                MvPagina.ActiveViewIndex = 0;
+            }
+        }
+
+        private void ExistenDatosRespuesta(DataTable datos)
+        {
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                MvPagina.ActiveViewIndex = 1;
+            }
+            else
+            {
+                MvPagina.ActiveViewIndex = 0;
+            }
+        }
+    }
+}
