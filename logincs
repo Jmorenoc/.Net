@@ -1,0 +1,85 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Corp.Negocio;
+using ControlFI.Web.Utiles;
+
+namespace ControlFI.Web
+{
+    public partial class Login : System.Web.UI.Page
+    {
+        private GestorLineas GestorLineas;
+        private GestorLimites GestorLimites;
+        private bool Developing;
+        private string usr;
+        private int Entidad;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Developing = false; // DESARROLLO EN CURSO
+            usr = "ytorres";
+            txtUsuario.Text = usr;
+            Entidad = 1;
+            GestorLineas = new GestorLineas();
+            GestorLimites = new GestorLimites();             
+            Session.RemoveAll();
+            txtPassword.Attributes.Add("onFocus", "this.select()");            
+            if(Developing)
+                btnAceptar_Click(sender, e);            
+        }
+
+        protected void btnAceptar_Click(object sender, EventArgs e)
+        {
+            this.Session["DEVELOPING"] = Developing;
+            List<ControlFI.BAC.Entities.User> dt = new List<ControlFI.BAC.Entities.User>();
+            if (Developing)
+            {
+                dt = ControlFI.BAC.Comunication.User.ValidateCredentials(usr, "1234");
+                UserInit(dt, GestorLineas, GestorLimites);
+                var asd = Pantallas.PANTALLAS.INICIO;
+
+                //Response.Redirect("~/Inicio.aspx");
+                Response.Redirect("~/Formularios/Mantenedores/Productos.aspx");
+            }
+            else
+            {
+                dt = ControlFI.BAC.Comunication.User.ValidateCredentials(txtUsuario.Text, txtPassword.Text);
+                UserInit(dt, GestorLineas, GestorLimites);
+                Response.Redirect("~/inicio.aspx");
+                
+                //if (dt.Count == 0)                
+                //    //MensajeOK1.ShowMessage("Usuario no existe o contraseña inválida!!", 1);                    
+                //else
+                //{
+                //    if (dt[0]._Bloqueado == "1")
+                //        //MensajeOK1.ShowMessage("Usuario bloqueado", 1);
+                //    else
+                //    {
+                //        UserInit(dt, GestorLineas, GestorLimites);
+                //        Response.Redirect("~/inicio.aspx");
+                //    }
+                //}
+            }
+        }
+
+        private void UserInit(List<ControlFI.BAC.Entities.User> dt, GestorLineas glin, GestorLimites glim)
+        {
+            Session["usr"] = dt[0]._Usuario.Trim();
+            Session["Nombre"] = dt[0]._Nombre.Trim();
+            Session["Tipo"] = dt[0]._Tipo.Trim(); // asignar
+            Session["Entidad"] = Entidad;
+            //Session["nombreentidad"] = "Corpbanca";                        
+            Session["Clientes"] = glin.CargarClientesLcr();
+            Session["ClientesLcr"] = glin.CargarClientesLcr();
+            Session["Operadores"] = glim.Carga_Operadores();
+        }
+
+        protected void txtPassword_Load(object sender, EventArgs e)
+        {
+            txtPassword.Focus();            
+        }
+    }
+}
