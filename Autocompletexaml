@@ -1,0 +1,30 @@
+<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="AutoComplete.ascx.cs" Inherits="ControlFI.Web.Formularios.UserControls.AutoComplete" %>
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="asp" %>
+<style>
+    .hidden
+    {
+        display:none;
+    }
+    .field
+    {
+        
+    }    
+</style>
+<script >
+    function AsignaValor(source, event) {
+        document.getElementById("<%=TxtId.ClientID %>").value = event.get_value();
+        document.getElementById("<%=BtnBusqueda.ClientID %>").click();
+    }    
+</script>
+<div>
+    <asp:TextBox ID="TxtBusqueda" runat="server" />
+    <asp:AutoCompleteExtender
+        ID="AtcBusqueda" runat="server" ServiceMethod="CargaDatos"
+        TargetControlID="NombreCliente" EnableCaching="false" 
+        CompletionSetCount="10" CompletionInterval="200"
+        MinimumPrefixLength="3" FirstRowSelected="true"
+        UseContextKey="true" OnClientItemSelected="AsignaValor" />
+    <asp:TextBox ID="TxtId" runat="server" Text="" CssClass="hidden" />
+    <asp:Button ID="BtnBusqueda" runat="server" CssClass="hidden" onclick="BtnBusqueda_Click" />
+</div>
+
