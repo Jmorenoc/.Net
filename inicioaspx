@@ -1,0 +1,41 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Inicio.aspx.cs" Inherits="ControlFI.Web.Inicio" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server"></asp:Content>
+
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">    
+<div class="CapaSuperior"></div>
+<div class="CapaPrincipal">
+    <ul>
+        <li>
+            <a href="#" id="Crear"> Mantenedores </a>
+            <asp:Panel ID="Creacion" runat="server">
+                    <ul>                        
+                        <li>
+                            <a href="Formularios/Mantenedores/Conceptos.aspx"> Concepto </a>                            
+                        </li>
+                        <li>
+                            <a href="Formularios/Mantenedores/Items.aspx"> Items </a>                            
+                        </li>
+                        <li>
+                            <a href="Formularios/Mantenedores/Productos.aspx"> Producto </a>                            
+                        </li>                        
+                    </ul>
+                </asp:Panel>
+        </li>
+        <li>
+            <a href="Formularios/Modulos/Modulos.aspx">  Módulos </a>           
+        </li>        
+    </ul>
+</div>
+<div class="CapaInferior">
+</div>
+<asp:CollapsiblePanelExtender runat="server"
+    TargetControlID="Creacion"
+    CollapseControlID="Crear"
+    ExpandControlID="Crear"
+    ExpandDirection="Vertical"
+    Collapsed="true"
+    CollapsedSize="0"
+    ExpandedSize="53">
+</asp:CollapsiblePanelExtender>
+</asp:Content>
