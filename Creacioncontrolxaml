@@ -1,0 +1,143 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="CreacionControl.aspx.cs" Inherits="ControlFI.Web.Formularios.Modulos.CreacionControl" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server"></asp:Content>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<%@ Register src="../UserControls/Mensaje.ascx" tagname="Mensaje" tagprefix="msg" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">    	
+
+<script language="javascript" type="text/javascript">
+    function CheckAll(obj) {
+        var gv = document.getElementById('<%=GrillaItems.ClientID %>');
+        for (var i = 0; i < gv.all.length; i++) {
+            var nodo = gv.all[i];
+            nodo.checked = obj.checked;
+        }
+    }
+</script>
+
+<%--<script type="text/javascript" language="javascript">
+    $(document).ready(function () {       
+
+        var callbacks_list = $('.demo-callbacks ul');
+
+        $('.demo-list input').on('ifCreated ifClicked ifChanged ifChecked ifUnchecked ifDisabled ifEnabled ifDestroyed', function (event) {
+            callbacks_list.prepend('<p><span>#' + this.id + '</span> is ' + event.type.replace('if', '').toLowerCase() + '</p>');
+        }).iCheck({
+            checkboxClass: 'icheckbox_square-blue',            
+            increaseArea: '20%'
+        });
+    });
+</script>--%>
+
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+
+    <hr />
+
+    <asp:MultiView ID="MvPagina" runat="server">
+        <asp:View ID="ViwDatos" runat="server">
+        
+            <div class="MargenEstandar">
+            <div class="Centrado" style="width:98%" >
+                <div class="Izquierda">                   
+                    <div class="Label" style="text-align:right">
+                        <asp:Label ID="LblNombre" runat="server" Text="Nombre del Nuevo Control" />
+                    </div>
+                    <div class="Despejar"></div><div class="Despejar"></div><div class="Despejar"></div>
+                    <div class="Headers">
+                        <asp:Label ID="lblLista" runat="server" Text="Conceptos" style="vertical-align: middle" />
+                    </div>
+                    <div style="margin-left: -3px; height: 182px" >
+                        <asp:Panel runat="server" ID="PanelConceptos" CssClass="PanelBordes" ScrollBars="Auto" Width="182px" height="182px" style="margin-left: 3px; margin-top:5px" >                                            
+                            <asp:CheckBoxList ID="ListaConceptos" runat="server" AutoPostBack="true"
+                                onselectedindexchanged="ListaConceptos_SelectedIndexChanged" 
+                                ondatabound="ListaConceptos_DataBound" />
+                        </asp:Panel>
+                    </div>
+                </div>
+                
+                <%--<asp:ToggleButtonExtender ID="BtnToggle" runat="server"
+                    
+                >
+                </asp:ToggleButtonExtender>--%>            
+
+                <div class="Derecha" style="width:74%">
+                    <div class="MargenLateral">
+                        <div class="Label">
+                            <div class="Izquierda" style="margin-left:-10px; width:500px; display:inline-table">
+                                    <asp:TextBox ID="TxtNombre" runat="server" CssClass="TextBoxBusqueda" />
+                                    <asp:RequiredFieldValidator
+                                        EnableClientScript="true"
+                                        ID="ValidadorNombre" 
+                                        runat="server" 
+                                        ControlToValidate="TxtNombre" 
+                                        ErrorMessage="Nombre Incorrecto" 
+                                        Display="Static"
+                                        InitialValue=""
+                                        Text = "* El Control debe tener un nombre"
+                                        style="display:inline-block; width:200px; color:Red" />                                
+                            </div>
+                        </div>
+                        <div class="Despejar"></div><div class="Despejar"></div><div class="Despejar"></div>                                            
+                        <asp:Panel ID="Panel1" runat="server" ScrollBars="Auto" Height="214px" Width="100%" CssClass="PanelBordes">
+                            <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+                                <ContentTemplate>
+                                    <asp:GridView ID="GrillaItems" runat="server" CssClass="GrillaMenor" 
+                                        BorderWidth="0px" AutoGenerateColumns="false" ShowHeaderWhenEmpty="true" onrowdatabound="GrillaItems_RowDataBound">
+                                    <AlternatingRowStyle CssClass="GrillaMenorAlternada" />
+                                        <Columns>
+                                            <asp:TemplateField>
+                                            <HeaderStyle Width="40px" />
+                                                <HeaderTemplate>
+                                                    <asp:CheckBox ID="chbTodos" runat="server" CssClass="demo-list clear" onClick="Javascript:CheckAll(this);" />
+                                                    <asp:Image ID="Image1" ImageUrl="~/Graficos/Icons/Select-icon.png" runat="server" />
+                                                </HeaderTemplate>
+                                                <ItemTemplate>
+                                                    <center>
+                                                        <%--<asp:CheckBox ID="chbSelector" runat="server" CssClass="demo-list clear" />--%>
+                                                        <asp:CheckBox ID="chbSelector" runat="server" />
+                                                    </center>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>                                     
+                                            <asp:BoundField DataField="Concepto" HeaderText="Concepto" />
+                                            <asp:BoundField DataField="Item" HeaderText="Descripción Item" />
+                                        </Columns>
+                                    </asp:GridView>
+                                    <asp:Label ID="mensaje" runat="server" style="visibility:hidden; text-align:center; vertical-align:middle" Text="" />
+                                </ContentTemplate>
+                            </asp:UpdatePanel>
+                        </asp:Panel>                    
+                    </div>
+                </div>                                 
+
+                <div style="clear:both; height:15px"></div>
+
+                <div>
+                    <asp:CustomValidator ID="Validador" runat="server" Text="" ErrorMessage=""
+                        onservervalidate="Validador_ServerValidate"/>
+                </div>
+
+                <div class="Derecha">
+                    <div class="MargenLateral">                    
+                        <asp:Button ID="BtnCrear" runat="server" Text="Crear" CssClass="Guardar" 
+                            onclick="BtnCrear_Click" />
+                    </div>            
+                </div>
+            </div>        
+        </div>
+    
+        <div>
+            <msg:mensaje ID="Alerta" runat="server" />        
+        </div>
+
+        </asp:View>
+        <asp:View ID="ViwNoDatos" runat="server">
+            <div class="TextoCentrado">                
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>
+        </asp:View>
+    </asp:MultiView>   
+
+</asp:Content>
