@@ -1,0 +1,264 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using Corp.Negocio;
+using System.Collections;
+using System.Xml;
+using System.Xml.Linq;
+using System.Drawing;
+
+namespace ControlFI.Web.Formularios.Modulos
+{
+    public partial class GestionLCR : System.Web.UI.Page
+    {        
+        private GestorLineas gestor;        
+        private static List<KeyValuePair<string, string>> Clientes;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            gestor = new GestorLineas();
+            if (!Page.IsPostBack)
+            {
+                this.Session["dt"] = null;
+                Enlazar();
+            }
+        }
+
+        public void Enlazar()
+        {
+            if (this.Session["ClientesLcr"] == null)
+            {
+                Clientes = gestor.CargarClientesLcr();  // Obtiene clientes en caso que la variable se haya borrado
+                this.Session["ClientesLcr"] = Clientes;
+            }
+            else
+            {
+                Clientes = this.Session["ClientesLcr"] as List<KeyValuePair<string, string>>;
+            }
+            ExistenDatos(Clientes);
+        }        
+                
+        [System.Web.Services.WebMethod]
+        [System.Web.Script.Services.ScriptMethod]
+        public static string[] CargarClientes(string prefixText, int count)
+        {
+            List<string> Lista_Clientes = new List<string>();
+            var nuevos = Clientes.Where(x => x.Key.ToUpperInvariant().Contains(prefixText.ToUpperInvariant())).Take(5);
+            foreach (KeyValuePair<string, string> item in nuevos)
+            {
+                Lista_Clientes.Add(AjaxControlToolkit.AutoCompleteExtender.CreateAutoCompleteItem(item.Key, item.Value));
+            }
+            return Lista_Clientes.ToArray();
+        }        
+        
+        public void CargaCliente(int id)
+        {
+            Dictionary<string, string> atributos = gestor.ObtenerAtributos(id);
+            TxbRut.Text = atributos["Rut"];
+            TxtClasificacion.Text = atributos["Clasificacion"];
+            TxtGAsociada.Text = atributos["GarantiaAsociada"];
+            TxtGEfectiva.Text = atributos["GarantiaEfectiva"];
+            TxtGConsultiva.Text = atributos["GarantiaConstitutiva"];            
+        }
+
+        public void CargaLineas(int id)
+        {
+            Dictionary<int, string> lineas = new Dictionary<int, string>();
+            lineas = gestor.ObtenerLineas(id);
+                        
+            bool principal = false;
+            foreach (KeyValuePair<int, string> valores in lineas)
+            {
+                if (!principal)
+                {
+                    Lista1.Items.Add(new ListItem(valores.Value, valores.Key.ToString()));
+                    Lista1.SelectedIndex = 0;
+                    Lista1_SelectedIndexChanged(null, null);
+                    principal = true;
+                }
+                else
+                {
+                    Lista2.Items.Add(new ListItem(valores.Value, valores.Key.ToString()));
+                    // modificar si carga al momento de identificar las lineas
+                }
+                Lista1.DataBind();
+                Lista2.DataBind();
+            }
+        }
+
+        private void Limpiar()
+        {
+            Lista1.Items.Clear();
+            Lista2.Items.Clear();
+            ListaLineas.DataSource = null;
+            ListaLineas.DataBind();
+        }
+
+        protected void Lista1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int ClienteId = Convert.ToInt32(TxtValor.Text);
+            int LcrId = Convert.ToInt32(Lista1.SelectedItem.Value);
+            Lista2.SelectedIndex = -1;
+            DataTable linea = gestor.ObtenerDetalleLineas(ClienteId, LcrId);            
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();
+            this.Session["dl"] = linea;
+        }
+        
+        protected void Lista2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int ClienteId = Convert.ToInt32(TxtValor.Text);
+            int LcrId = Convert.ToInt32(Lista2.SelectedItem.Value); // si solo hay linea principal
+            Lista1.SelectedIndex = -1;
+            DataTable linea = gestor.ObtenerDetalleLineas(ClienteId, LcrId);
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();
+            this.Session["dl"] = linea;
+        }
+
+        protected void ListaLineas_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow && e.Row.RowState != DataControlRowState.Edit)
+            {
+                DataRowView rowview = e.Row.DataItem as DataRowView;
+                int estado = Convert.ToInt32(rowview["EstadoId"]);
+                
+                ImageButton Bloquear = e.Row.FindControl("BtnBloqueo") as ImageButton;
+                if (Bloquear != null)
+                {
+                    if (estado == 0)
+                    {
+                        Bloquear.ImageUrl = "~/Graficos/Icons/Bad mark.png";                        
+                    }
+                    else
+                    {
+                        Bloquear.ImageUrl = "~/Graficos/Icons/Good mark.png";
+                    }
+                }                
+            }
+        }        
+
+        protected void ListaLineas_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            ListaLineas.EditIndex = e.NewEditIndex;
+            DataTable linea = this.Session["dl"] as DataTable;
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();
+        }
+
+        protected void ListaLineas_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            ListaLineas.EditIndex = -1;
+            DataTable linea = this.Session["dl"] as DataTable;
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();
+        }
+        // ojo con el formato numérico
+        protected void ListaLineas_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+            int ClienteId = Convert.ToInt32(TxtValor.Text);
+            int LcrId = Convert.ToInt32(Lista1.SelectedItem.Value);
+
+            string Disponible   = Convert.ToString(((TextBox)ListaLineas.Rows[e.RowIndex].FindControl("MontoDisponible")).Text);
+            string Utilizado    = Convert.ToString(((TextBox)ListaLineas.Rows[e.RowIndex].FindControl("MontoUtilizado")).Text);
+            string Asignado     = Convert.ToString(((TextBox)ListaLineas.Rows[e.RowIndex].FindControl("MontoAsignado")).Text);
+            string Exceso       = Convert.ToString(((TextBox)ListaLineas.Rows[e.RowIndex].FindControl("MontoExceso")).Text); 
+            
+            List<decimal> nueva_linea = new List<decimal>();
+
+            nueva_linea.Add(Convert.ToDecimal(Disponible));
+            nueva_linea.Add(Convert.ToDecimal(Utilizado));
+            nueva_linea.Add(Convert.ToDecimal(Asignado));
+
+            var developing = this.Session["DEVELOPING"];
+            if (!Convert.ToBoolean(developing))
+                gestor.ModificarLinea(ClienteId, LcrId, nueva_linea); // GUARDAR CAMBIOS
+
+            DataTable linea = this.Session["dl"] as DataTable;
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();
+            ListaLineas.EditIndex = -1;
+        }
+
+        #region formato de texto
+
+        protected void Lista1_DataBound(object sender, EventArgs e)
+        {
+            FormatearTexto(Lista1);
+        }
+
+        protected void Lista2_DataBound(object sender, EventArgs e)
+        {
+            FormatearTexto(Lista2);
+        }
+
+        private void FormatearTexto(ListBox lista)
+        {
+            foreach (ListItem item in lista.Items)
+            {
+                item.Text = Utiles.Utiles.UppercaseFirst(item.Text);
+            }
+        }
+
+        #endregion
+
+        #region Validacion
+
+        protected void ValidadorPagina_ServerValidate(object source, ServerValidateEventArgs args)
+        {   
+            // Completar la validacion
+            args.IsValid = true;
+        }
+
+        protected void BtnBloqueo_Click(object source, EventArgs e)
+        {   
+            DataTable linea = this.Session["dl"] as DataTable;
+            int estado = Convert.ToInt16(linea.Rows[0]["EstadoId"]);
+            if (estado == 0)
+            {
+                linea.Rows[0]["EstadoId"] = 1;
+            }
+            else
+            {
+                linea.Rows[0]["EstadoId"] = 0;
+            }
+            ListaLineas.DataSource = linea;
+            ListaLineas.DataBind();            
+        }
+
+        #endregion
+        
+        protected void BtnBusqueda_Click(object sender, ImageClickEventArgs e)
+        {
+            Limpiar();
+            string entrada = TxtValor.Text;
+            if (entrada != "")
+            {
+                int id = Convert.ToInt32(entrada);
+                CargaCliente(id);
+                CargaLineas(id);
+            }
+        }
+
+        protected void TxtValor_TextChanged(object sender, EventArgs e)
+        {            
+            BtnBusqueda_Click(sender, null);
+        }
+
+        private void ExistenDatos(List<KeyValuePair<string, string>> datos)
+        {
+            if (datos == null || datos.Count == 0)
+            {
+                MvPagina.ActiveViewIndex = 1;
+            }
+            else
+            {
+                MvPagina.ActiveViewIndex = 0;
+            }
+        }
+    }
+}
