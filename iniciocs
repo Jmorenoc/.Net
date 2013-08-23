@@ -1,0 +1,19 @@
+using System;
+
+namespace ControlFI.Web
+{
+    public partial class Inicio : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            int a = 1;
+            int b = 0;
+            int c = 1/b;
+
+        }
+    }
+}
