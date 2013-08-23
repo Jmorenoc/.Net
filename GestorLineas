@@ -1,0 +1,212 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data;
+using Corp.Entidades.Clases;
+using Corp.Entidades.Clases.Transaccion;
+using Corp.Datos.Clases;
+
+namespace Corp.Negocio
+{
+    public class GestorLineas
+    {
+        #region Parametros
+
+        private eLineas Linea;        
+        private eClienteLcr ClienteLCR;
+        private eTransaccion Transaccion;        
+
+        #endregion
+
+        #region Constructor
+
+        public GestorLineas()   {}
+
+        #endregion
+                
+        // Lista de Clientes cargados al Login
+        public List<KeyValuePair<string, string>> CargarClientesLcr()
+        {
+            List<cf_Cliente> ListaClientes = new List<cf_Cliente>();
+            ListaClientes = InstanceOF.Obtener_Objeto(string.Format("select clienteId as Id, NombreCliente, Codigo, Subcodigo from clientelcr as Lcr inner join Cliente as Cl on Lcr.ClienteId = Cl.Id where NombreCliente <> '' group by clienteId, NombreCliente, Codigo, Subcodigo "), typeof(cf_Cliente)) ?? new List<cf_Cliente>();
+
+            List<KeyValuePair<string, string>> nombres = new List<KeyValuePair<string, string>>();
+            
+            foreach (cf_Cliente cliente in ListaClientes)
+            {
+                nombres.Add(new KeyValuePair<string,string>(cliente.NombreCliente.TrimEnd()+" "+cliente.Codigo +"-"+cliente.SubCodigo, cliente.Id.ToString()));
+            }
+            return nombres;
+        }
+
+        #region Gestion de Líneas
+        
+        // Estructura de Respuesta
+        public class DefinicionLineas
+        {
+            public int LcrId;
+            public string Producto;
+        }
+        // LINEAS DEL CLIENTE
+        
+        public Dictionary<int, string> ObtenerLineas(int Id)
+        {
+            List<DefinicionLineas> lineas = new List<DefinicionLineas>();            
+            lineas = InstanceOF.Obtener_Objeto_Procedimiento(InstanceOF.PROCESO_SP.LN_PRINCIPAL, typeof(DefinicionLineas), new Dictionary<string, object> { { "ClienteId", Id } }) ?? new List<DefinicionLineas>();
+            
+            Dictionary<int, string> lista = new Dictionary<int, string>();
+            // Ordenar lineas segun principal y sublineas //lineas.Add(principal, principal.ToString()); // Linea Principal indice 0            
+            foreach (DefinicionLineas ln in lineas)
+            {
+                lista.Add(ln.LcrId, ln.Producto.ToString());                
+            }
+            return lista;
+        }
+
+        public DataTable ObtenerDetalleLineas(int ClienteId, int LcrId)        
+        {
+            DataTable lineaDetallada = new DataTable();
+            lineaDetallada = InstanceOF.Obtener_Tabla("select LcrId, Nombre='', Moneda='',  MontoDisponible as Disponible, MontoOcupado as Utilizado, MontoAsignado as Asignado, MontoExceso as Exceso , EstadoId from clientelcr where LcrId =" + LcrId +" and ClienteId = "+ ClienteId);
+            //@"select LcrId, NombreLcr as Nombre, Moneda='',  MontoDisponible as Disponible, MontoOcupado as Utilizado, MontoAsignado as Asignado, MontoExceso as Exceso , CLIENTE.EstadoId from clientelcr as CLIENTE inner join Lcr as LCR on CLIENTE.LcrId = LCR.Id"
+            return lineaDetallada;
+        }
+
+        public void ModificarLinea(int ClienteId, int LcrId, List<decimal> valores)
+        { 
+            
+        }
+
+        // ATRIBUTOS DEL CLIENTE
+        public Dictionary<string, string> ObtenerAtributos(int id)
+        {
+            Dictionary<string, string> salida = new Dictionary<string, string>();
+            cf_Cliente Cliente = ObtieneCliente(id);
+            cf_Garantia Garantia = ObtieneGarantia(Cliente);
+
+            salida.Add("Rut", Cliente.Codigo.ToString() +"-"+Cliente.SubCodigo.ToString());
+            salida.Add("Clasificacion", ObtieneClasificacion(Cliente));
+            salida.Add("GarantiaAsociada", Garantia.MontoGarantiaAsociada.ToString());
+            salida.Add("GarantiaEfectiva", Garantia.MontoGarantiaEfectiva.ToString());
+            salida.Add("GarantiaConstitutiva", Garantia.MontoConstituido.ToString());            
+
+            return salida;
+        }
+
+        public cf_Cliente ObtieneCliente(int Id)
+        {
+            List<cf_Cliente> ListaClientes = new List<cf_Cliente>();
+            ListaClientes = InstanceOF.Obtener_Objeto(string.Format("select * from Cliente where Id = {0}", Id), typeof(cf_Cliente)) ?? new List<cf_Cliente>();
+            return ListaClientes[0];
+        }
+        
+        public cf_Garantia ObtieneGarantia(cf_Cliente cliente)
+        {
+            List<cf_Garantia> ListaGarantia = new List<cf_Garantia>();
+            ListaGarantia = InstanceOF.Obtener_Objeto(string.Format("select * from Garantia where ClienteId = {0}", cliente.Id), typeof(cf_Garantia)) ?? new List<cf_Garantia>();
+            if (ListaGarantia.Count > 0)
+            {
+                return ListaGarantia[0];
+            }
+            else
+            {// Es posible que no tenga garantías asociadas
+                return new cf_Garantia();
+            }            
+        }
+
+        public string ObtieneClasificacion(cf_Cliente cliente)
+        {            
+            List<cf_ClasificacionCredito> ListaClasificacion = new List<cf_ClasificacionCredito>();
+            ListaClasificacion = InstanceOF.Obtener_Objeto(string.Format("select * from ClasificacionCredito where id = {0}", cliente.ClasificacionCreditoId), typeof(cf_ClasificacionCredito)) ?? new List<cf_ClasificacionCredito>();
+            return ListaClasificacion[0].Valor.ToString();
+        }
+
+        #endregion
+
+        // Modificar 
+        //public DataTable Lineas_Cliente(int id)
+        //{
+        //    Linea = new eLineas();
+        //    Linea.ClienteId = id;
+        //    return Linea.Lineas_Obtener();            
+        //}
+
+        #region Operaciones Pendientes
+
+        public DataTable Operaciones_Pendientes()
+        {
+            DataTable operaciones = new DataTable();
+
+            operaciones = InstanceOF.Obtener_Tabla(@"select 
+	                                                    transaccion.id,
+	                                                    Grupo.Descripcion as Sistema,
+	                                                    Tipo.NombreTipoTransaccion as Operacion,
+	                                                    Tipo = '',
+	                                                    Cliente.NombreCliente as Cliente,
+	                                                    CodigoMoneda as Moneda,
+	                                                    MontoInicialContrato as MontoOriginal,
+	                                                    Numerotransaccion as Operacion,
+	                                                    Firmas = '',	                                                    
+	                                                    Usuario.NombreUsuario as Operador
+                                                    from transaccion
+	                                                    inner join GrupoInstrumento as Grupo on transaccion.GrupoInstrumentoId = Grupo.Id
+	                                                    inner join TransaccionTipo as Tipo on transaccion.TransaccionTipoId = Tipo.Id
+	                                                    inner join Cliente as Cliente on transaccion.ClienteId = Cliente.Id
+	                                                    inner join Moneda as Moneda on transaccion.MonedaInicialContratoId = Moneda.id
+	                                                    left join Usuario as Usuario on transaccion.UsuarioId = Usuario.Id
+                                                    --where
+	                                                --    transaccion.EstadoId = 5");
+            return operaciones;
+        }
+
+        public DataTable Obtener_Transacciones(DateTime Fecha)
+        {
+            string fecha = Fecha.ToString("yyyyMMdd");
+            DataTable transacciones = new DataTable();
+            transacciones = InstanceOF.Obtener_Tabla(@" select 	
+	                                                        transaccion.Id,
+	                                                        Cliente.Codigo,
+	                                                        Cliente.NombreCliente,
+	                                                        Cliente.SubCodigo,
+	                                                        Cliente.Relacion,
+	                                                        Cliente.Nivel,	
+	                                                        GrupoInstrumento.Descripcion,
+	                                                        NombreFormaPago,
+	                                                        NombreTipoTransaccion,
+	                                                        Estado.NombreEstado,
+	                                                        RutCliente,
+	                                                        CodigoCliente	
+                                                        from transaccion	
+	                                                        inner join Cliente on transaccion.clienteId = Cliente.Id
+	                                                        inner join GrupoInstrumento on transaccion.GrupoInstrumentoId = GrupoInstrumento.Id
+	                                                        inner join FormaPago on transaccion.FormaPagoNacionalId = FormaPago.Id
+	                                                        inner join TransaccionTipo on transaccion.TransaccionTipoId = TransaccionTipo.Id
+	                                                        left join Estado on transaccion.EstadoId = Estado.Id
+                                                        where
+	                                                        (DateDiff(day, '" + fecha + "', FechaVencimientoContrato) < 0)");	                                                      
+            return transacciones;
+        }
+        #endregion
+
+
+        #region Totalizador
+
+        public DataTable ObtenerResumen()
+        {
+            DataTable datos = new DataTable();
+
+            datos = InstanceOF.Obtener_Tabla(string.Format(@"select Item.Descripcion as Moneda, sum(MontoOcupado) as Nominal, cast(sum(MontoOcupado)*FactorConversion as decimal) as TotalCLP from clientelcr as Cliente
+                                                                inner join Lcr on Cliente.LcrId = Lcr.Id
+                                                                inner join codigoLcr as Codigo on Codigo.LcrId = Lcr.Id
+                                                                inner join Item on Codigo.ItemId = Item.Id
+                                                                inner join ParidadDivisa as Paridad on Item.Descripcion = Paridad.MonedaBase
+                                                                where ConceptoId = 2 and MonedaCotizada = 'CLP'
+                                                                group by Item.Descripcion, FactorConversion"));
+
+            return datos;
+        }
+
+        #endregion|
+
+    }
+}
