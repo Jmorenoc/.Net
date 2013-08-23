@@ -1,0 +1,109 @@
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="ControlFI.Web.SiteMaster" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head runat="server">    
+    <meta http-equiv="X-UA-Compatible" content="IE=8" />
+
+    <title> CORPBANCA </title>
+    
+    <link href="~/Styles/Estilo.css" rel="Stylesheet" type="text/css" />
+    <link href="~/Styles/MenuStyle.css" rel="stylesheet" type="text/css" />     
+
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server"></asp:ContentPlaceHolder>    
+
+</head>
+
+<body>
+    <div>      
+        <form runat="server">
+            <asp:ScriptManager ID="ScriptManager1" runat="server" />
+            <div class="page">
+                <div class="header">
+                    <%--<div class="Flotante" style="width:100%; margin-top:80px;">
+                        <div class="Derecha" style="text-align:center">
+                            <div style="width: 95px; margin: 0px 0px 0px 0px;">
+                                <div class="Izquierda">
+                                    <asp:ImageButton ID="BtnUsr" runat="server" CssClass="UsrIcon" ImageUrl="/Graficos/Icons/User.png" Visible="false" style="vertical-align:middle" />
+                                </div>
+                                <div class="Izquierda">--%>
+                                    <%--<asp:Button ID="BtnUsuario" runat="server" Text="" CssClass="Usuario" Visible="false" style="text-align:left; vertical-align:middle; margin-left: 0px;" />--%>
+                                    <%--<asp:Menu ID="MnuUsuario" runat="server" Orientation="Horizontal" CssClass="MenuUsuario">
+                                        <Items>
+                                            <asp:MenuItem Text="">
+                                                <asp:MenuItem Text="Salir" NavigateUrl="~/Login.aspx" />
+                                            </asp:MenuItem>
+                                        </Items>
+                                    </asp:Menu>--%>                                     
+                                <%--</div>--%>
+                            <%--</div>            --%>                
+                        <%--</div>--%>
+                    <%--</div>                                --%>
+                    <asp:Image ID="HeaderImagen" ImageUrl="~/Graficos/Imagenes/Header.png" runat="server" />
+                    
+                    <div id="Area" class="AreaMenu" runat="server" style="visibility:hidden">
+                        <%--<asp:Menu ID="NavigationMenu" runat="server" CssClass="menu"
+                            EnableViewState="false" IncludeStyleBlock="false" Orientation="Horizontal" 
+                            Visible="False" MaximumDynamicDisplayLevels="5">            
+                        </asp:Menu>--%>
+                        <div>                            
+                            <ul class="menu">
+	                            <li><a class="shadow" href="/Formularios/Mantenedores/Mantenedores.aspx">Mantenedores</a>
+                                    <ul>			                            
+                                        <li><a href="/Formularios/Mantenedores/Conceptos.aspx"> Conceptos </a></li>
+                                        <li><a href="/Formularios/Mantenedores/Items.aspx"> Items </a></li>
+                                        <li><a href="/Formularios/Mantenedores/Productos.aspx" > Producto </a></li>
+                                        <li><a href="/Formularios/Mantenedores/MantencionRiesgo.aspx" > Riesgos Cliente </a></li>
+                                        <li><a href="/Formularios/Mantenedores/ReduccionThreshold.aspx" > Reducción Threshold </a></li>
+		                            </ul>
+                                </li>
+	                            <li><a href="#">Controles</a>
+                                    <ul>
+			                            <li><a href="/Formularios/Modulos/CreacionControl.aspx"> Creacion de Controles</a></li>
+			                            <li><a href="/Formularios/Modulos/AsignacionControl.aspx"> Asignación de Controles </a></li>
+		                            </ul>
+                                </li>
+	                            <li><a href="#">Líneas/Límite</a>
+		                            <ul>
+			                            <li><a href="/Formularios/Modulos/GestionLCR.aspx" >Gestion de Líneas</a></li>
+                                        <li><a href="/Formularios/Modulos/GestionLimites.aspx" >Gestion de Límites</a></li>
+			                            <li><a href="/Formularios/Modulos/MonitoreoOperaciones.aspx"> Operaciones Pendientes </a></li>
+			                            <li><a href="/Formularios/Modulos/LiberaLcr.aspx" > Liberación de Líneas </a></li>
+		                            </ul>
+	                            </li>
+	                            <li><a href="#">Riesgo</a>
+                                    <ul>
+			                            <%--<li><a href="/Formularios/Modulos/RiesgosGenerales.aspx" > Lista de Riesgos Generales</a></li>
+			                            <li><a href="/Formularios/Modulos/PonderadoresRiesgo.aspx" > Pond. Riesgos Internos</a></li>
+                                        <li><a href="/Formularios/Modulos/CarteraFinanciera.aspx" > Cartera Financiera </a></li>
+                                        <li><a href="/Formularios/Modulos/AccesoLcr.aspx" > Perfiles de Acceso a Líneas </a></li>--%>
+                                        <li><a href="#" > Lista de Riesgos Generales</a></li>
+			                            <li><a href="#" > Pond. Riesgos Internos</a></li>
+                                        <li><a href="#" > Cartera Financiera </a></li>
+                                        <li><a href="#" > Perfiles de Acceso a Líneas </a></li>
+		                            </ul>
+                                </li>
+	                            <li><a href="#">Threshold</a>
+                                    <ul>
+			                            <li><a href="/Formularios/Modulos/MantencionThreshold.aspx" > Gestión Threshold </a></li>			                            
+		                            </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>                            
+                </div>
+                            
+                <div class="Base">                    
+                    <asp:UpdatePanel ID="UpdatePanel1" runat="server" ChildrenAsTriggers="false" UpdateMode="Conditional">                                
+                        <ContentTemplate>
+                            <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+            <div class="footer"></div>
+        </form>  
+    </div>        
+</body>
+</html>
