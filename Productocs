@@ -1,0 +1,92 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Productos.aspx.cs" Inherits="ControlFI.Web.Mantenedores.Productos" %>
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="asp" %>
+<%@ Register src="../UserControls/Mensaje.ascx" tagname="Mensaje" tagprefix="msg" %>
+<%@ Register src="../UserControls/ComboBox.ascx" tagname="Combo" tagprefix="cmb" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server"></asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+            
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+
+    <hr />
+    
+    <asp:MultiView ID="MvPagina" runat="server">
+        <asp:View ID="ViwDatos" runat="server">
+
+                <div class="MargenEstandar" style="height:40px">
+                    <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
+                        <ContentTemplate>                       
+                            <div class="MargenIzquierdo" style="width:95%">    
+                                <div class="Izquierda">                                
+                                    <asp:RadioButtonList ID="Choice" runat="server" CssClass="Choice" OnSelectedIndexChanged="AlternaEstado" AutoPostBack="true">
+                                        <asp:ListItem Value="1" Text="Crear un nuevo producto" />
+                                        <asp:ListItem Value="2" Text="Crear producto, a partir de uno existente" />
+                                    </asp:RadioButtonList>            
+                                </div>
+                                <div class="Izquierda">
+                                    <div class="">
+                                        <div style="margin-left:20px">
+                                            <asp:TextBox ID="NombreProducto" runat="server" Text="" onfocus="this.select()" CssClass="TextBox" />
+                                            <asp:RequiredFieldValidator
+                                                EnableClientScript="true"
+                                                ID="ValidadorNombre"
+                                                runat="server"
+                                                ControlToValidate="NombreProducto"
+                                                ErrorMessage="No hay Nombre"
+                                                Display="Static"
+                                                InitialValue=""
+                                                Text="El Producto debe tener un nombre"
+                                                style="display:inline-block; width:200px; color:Red" />                                    
+                                            <div class="Despejar"></div>                            
+                                            <div>                                        
+                                                <cmb:Combo ID="Combo" runat="server" OnSelectedIndexChanged="Combo_SelectedIndexChanged" />                                        
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </ContentTemplate>
+                        <Triggers>
+                            <asp:AsyncPostBackTrigger ControlID="Guardar" EventName="Click"/>                                                        
+                            <asp:AsyncPostBackTrigger ControlID="Choice" EventName="SelectedIndexChanged"/>
+                        </Triggers>
+                    </asp:UpdatePanel>
+                </div>
+
+            <div style="clear:both">
+                <div class="Despejar"></div>
+            </div>
+            <div class="MargenMinimo">    
+                <asp:UpdatePanel runat="server" ID="Update">
+                    <ContentTemplate>
+                        <asp:Panel ID="PanelProductos" runat="server" CssClass="PanelProducto" ScrollBars="Auto">
+                            <asp:Table ID="TablaProductos" runat="server" CssClass="Tabla">                        
+                            </asp:Table>
+                        </asp:Panel>                
+                    </ContentTemplate>                        
+                </asp:UpdatePanel>    
+            </div>     
+            <div class="Inferior">        
+                <div class="MargenDerecho">        
+                <asp:Button ID="Guardar" runat="server" CssClass="Guardar" 
+                    Text="Guardar" onclick="Guardar_Click" />            
+                </div>
+            </div>
+    
+            <div>
+                <msg:Mensaje ID="Alerta" runat="server" />
+            </div>
+
+        </asp:View>
+        <asp:View ID="ViwSinDatos" runat="server">
+            <div class="TextoCentrado">
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>
+        </asp:View>
+    </asp:MultiView>       
+
+</asp:Content>
+
