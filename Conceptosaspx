@@ -1,0 +1,116 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="Conceptos.aspx.cs" Inherits="ControlFI.Web.Mantenedores.Conceptos" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<%@ Register src="../UserControls/Mensaje.ascx" tagname="Mensaje" tagprefix="msg" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server"></asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+
+    <hr />  
+    
+    <asp:MultiView ID="MvGlobal" runat="server">
+        <asp:View ID="ViwCargada" runat="server">
+            
+            <div class="Flotante Derecha" style="margin-left:50px;">
+                <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+                    <ContentTemplate>
+                    <asp:ImageButton ID="CrearConcepto" runat="server" CssClass="BotonFlotante"
+                        ImageUrl="~/Graficos/Icons/Add Green Button.png"
+                        onclick="CrearConcepto_Click"/>
+                    </ContentTemplate>
+                </asp:UpdatePanel>              
+            </div>
+
+            <asp:Panel ID="PanelPrincipal" runat="server" ScrollBars="Auto" Height="400px" Width="100%">
+
+            <div class="MargenMenor">
+        
+                <div class="Centrado" style="width:95%">
+                    <asp:UpdatePanel ID="UpdatePanel2" runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="ListaConceptos" runat="server" CellSpacing="1" AutoGenerateColumns="false" 
+                            CssClass="Grilla" AllowPaging="true" PageSize="9" ShowHeaderWhenEmpty="false" 
+                            onpageindexchanging="ListaConceptos_PageIndexChanging" onrowediting="ListaConceptos_RowEditing"
+                            onrowupdating="ListaConceptos_RowUpdating" onrowcancelingedit="ListaConceptos_RowCancelingEdit"
+                            onrowdeleting="ListaConceptos_RowDeleting" onrowdatabound="ListaConceptos_RowDataBound" >
+                                <HeaderStyle CssClass="GridViewHeader" />
+                                <AlternatingRowStyle CssClass="GrillaAlternada" />
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Descripcion" SortExpression="Desc">
+                                        <EditItemTemplate>
+                                            <asp:TextBox ID="TextBoxDesc" CssClass="TextBoxEditNumeric" runat="server" Width="98%" Text='<%# Bind("Descripcion") %>'></asp:TextBox>                                    
+                                        </EditItemTemplate>
+                                        <ItemTemplate>
+                                            <asp:Label ID="LabelDesc" CssClass="LabelGridViewNumeric" runat="server" Text='<%# Bind("Descripcion") %>'></asp:Label>
+                                        </ItemTemplate>                                
+                                    </asp:TemplateField>
+
+                                    <asp:TemplateField HeaderText="Control">
+                                    <EditItemTemplate>
+                                        <asp:DropDownList ID="DropDownControl" runat="server" CssClass="Combo" AutoPostBack="true" >
+                                        </asp:DropDownList>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="LabelControl" CssClass="LabelGridViewNumeric" runat="server" Text='<%# Bind("Control") %>'></asp:Label>
+                                    </ItemTemplate>
+                                    </asp:TemplateField>
+
+                                    <asp:TemplateField HeaderText="Plazo">
+                                    <EditItemTemplate>
+                                        <asp:CheckBox ID="CheckPlazo" runat="server" ToolTip="Marcar si tiene plazo" Text="Si"  />
+                                    </EditItemTemplate>                                                        
+                                    <ItemTemplate>
+                                        <asp:Label ID="LabelPlazo" CssClass="LabelGridViewNumeric" runat="server" Text='<%# Bind("Plazo") %>'></asp:Label>
+                                    </ItemTemplate>
+                                    </asp:TemplateField>
+                            
+                                    <asp:CommandField runat="server"  
+                                        HeaderText="Acción"
+                                        ControlStyle-Height="18" ControlStyle-Width="18"
+                                        ShowDeleteButton="true" ButtonType="Image" DeleteImageUrl="~/Graficos/Icons/Minus Red Button.png"
+                                        ShowEditButton="true" EditImageUrl="~/Graficos/Icons/Write Document.png"
+                                        ShowCancelButton="false" UpdateImageUrl="~/Graficos/Icons/Save Blue Button.png">
+                                        <HeaderStyle Width="130" HorizontalAlign="Center"/>                            
+                                        <ItemStyle HorizontalAlign="Center" />                                
+                                    </asp:CommandField>                                                   
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>
+                        <Triggers>
+                            <asp:AsyncPostBackTrigger ControlID="Guardar" EventName="Click" />
+                        </Triggers>
+                    </asp:UpdatePanel>
+                </div> 
+
+                <div style="clear:both; height: 15px"></div>
+
+                <div class="MargenDerecho">
+                    <div class="MargenDerecho">
+                        <div class="MargenDerecho">
+                            <asp:Button ID="Guardar" Text="Guardar" runat="server" CssClass="Guardar" onclick="Guardar_Click" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </asp:Panel>
+
+            <div>
+                <msg:Mensaje ID="Alerta" runat="server" />
+            </div>
+
+        </asp:View>
+
+        <asp:View ID="ViwNoData" runat="server">
+            <div class="Centrado" style="text-align:center">
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>
+        </asp:View>
+
+    </asp:MultiView>
+    
+
+</asp:Content>
