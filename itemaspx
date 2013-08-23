@@ -1,0 +1,108 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" EnableEventValidation="false" AutoEventWireup="true" CodeBehind="Items.aspx.cs" Inherits="ControlFI.Web.Formularios.Mantenedores.Items" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<%@ Register src="../UserControls/Mensaje.ascx" tagname="Mensaje" tagprefix="msg" %>
+<%@ Register src="../UserControls/ComboBox.ascx" tagname="Combo" tagprefix="cmb" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server"></asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+    
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+    
+    <hr />
+
+    <asp:MultiView ID="MvPagina" runat="server">
+        <asp:View ID="ViwDatos" runat="server">
+            
+            <div class="Flotante" style="margin-left:50px">
+                <div class="Derecha" style="margin-top: 25px;"> 
+                    <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+                        <ContentTemplate>
+                            <asp:ImageButton ID="CrearItem" runat="server" CssClass="BotonFlotante" ImageUrl="~/Graficos/Icons/Add Green Button.png" onclick="CrearItem_Click" />
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>
+            </div>
+        
+            <div class="MargenMenor" style="height: 15px">
+                <div class="Centrado" style="width: 350px">
+                    <div class="Izquierda">
+                        <div class="Label">
+                            <asp:Label ID="LblConcepto" runat="server" Text="Concepto" />
+                        </div>
+                    </div>
+                    <div class="Derecha">
+                        <cmb:Combo ID="Combo" runat="server" OnSelectedIndexChanged="Combo_SelectedIndexChanged" />                
+                    </div>
+                </div>
+            </div>
+            <asp:Panel ID="panelPrincipal" runat="server" ScrollBars="Auto" Height="400px" Width="100%">        
+                <div class="Centrado" style="height:245px">
+                    <asp:UpdatePanel ID="UpdatePanel2" runat="server">
+                        <ContentTemplate>
+                            <asp:GridView ID="ListaItems" runat="server" CssClass="Grilla" 
+                                AllowPaging="true" PageSize="8"
+                            ShowHeaderWhenEmpty="false" onpageindexchanging="ListaItems_PageIndexChanging" AutoGenerateColumns="false" 
+                            onrowcancelingedit="ListaItems_RowCancelingEdit" onrowdeleting="ListaItems_RowDeleting" 
+                            onrowediting="ListaItems_RowEditing" onrowupdating="ListaItems_RowUpdating" 
+                                onrowdatabound="ListaItems_RowDataBound" onrowdeleted="ListaItems_RowDeleted">
+                                <AlternatingRowStyle CssClass="GrillaAlternada" />            
+                                <Columns>
+                                    <asp:TemplateField HeaderText="Descripcion" SortExpression="Desc">
+                                        
+                                        <EditItemTemplate>
+                                            <asp:TextBox ID="TextBoxDesc" runat="server" CssClass="TextBox" 
+                                                Text='<%# Bind("Item") %>' width="300" />
+                                        </EditItemTemplate>
+                                        <ItemTemplate>
+                                            <asp:Label ID="LabelDesc" runat="server" CssClass="LabelGridViewNumeric" 
+                                                Text='<%# Bind("Item") %>' />
+                                        </ItemTemplate>
+                                    </asp:TemplateField>
+
+                                    <asp:CommandField
+                                        HeaderText="Acción"
+                                        ControlStyle-height="18" ControlStyle-Width="18"
+                                        ShowDeleteButton="true" ButtonType="Image" DeleteImageUrl="~/Graficos/Icons/Minus Red Button.png"
+                                        ShowEditButton="true" EditImageUrl="~/Graficos/Icons/Write Document.png"
+                                        ShowCancelButton="false" UpdateImageUrl="~/Graficos/Icons/Save Blue Button.png">
+                                        <HeaderStyle Width="130" HorizontalAlign="Center" />                    
+                                        <ItemStyle HorizontalAlign="Center" />
+                                    </asp:CommandField>
+                                </Columns>
+                            </asp:GridView>
+                        </ContentTemplate>                
+                    </asp:UpdatePanel>
+                </div>
+
+                <div style="clear:both; height:15px"></div>
+
+                <div class="Inferior">
+                    <div class="Derecha">
+                        <div class="MargenDerecho">
+                            <div class="MargenDerecho">
+                                <div class="MargenDerecho">
+                                    <asp:Button ID="Guardar" Text="Guardar" runat="server" CssClass="Guardar" onclick="Guardar_Click" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>        
+            </asp:Panel>
+
+            <div style="text-align:center">
+                <msg:Mensaje ID="Alerta" runat="server" />
+            </div>
+
+        </asp:View>
+
+        <asp:View ID="ViwNoDatos" runat="server">
+            <div class="TextoCentrado">                
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>
+        </asp:View>
+    </asp:MultiView>
+        
+</asp:Content>
