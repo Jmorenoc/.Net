@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI.WebControls;
+using System.Data;
+
+namespace ControlFI.Web.Utiles
+{
+    public class Utiles
+    {
+        /// <summary>
+        /// Transforma un string de entrada la forma capitalizada de cada palabra.
+        /// </summary>
+        /// <param name="s"> string de entrada </param>
+        /// <returns> String Capitalizado </returns>
+        public static string UppercaseFirst(string s)
+        {
+            string result = string.Empty;
+            string s1 = string.Empty;
+            string s2 = string.Empty;
+
+            if (string.IsNullOrEmpty(s))
+            {
+                return string.Empty;
+            }
+            else
+            {
+                string[] words = s.Split(' ');
+                foreach (string word in words)
+                {
+                    if (word.ToString() != "") // cambio realizado
+                    {
+                        if (!string.IsNullOrEmpty(result))
+                        {
+                            s2 = string.Empty;
+                            s1 = char.ToUpper(word[0]).ToString();
+                            for (int i = 1; i <= word.Substring(1).Length; i++)
+                            {
+                                s2 = s2 + char.ToLower(word[i]).ToString();
+                            }
+                            result = result + " " + s1 + s2;
+                        }
+                        else
+                        {
+                            s1 = char.ToUpper(word[0]).ToString();
+                            for (int i = 1; i <= word.Substring(1).Length; i++)
+                            {
+                                s2 = s2 + char.ToLower(word[i]);
+                            }
+                            result = s1 + s2;
+                        }
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Asigna un conjunto de valores, provenientes de un DataTable, a un control Checkbox
+        /// </summary>
+        /// <param name="tabla"> Tabla de Entrada </param>
+        /// <param name="criterio"> Campo e identificador de agrupación </param>
+        /// <param name="lista"> Componente donde serán almacenados los criterios </param>
+        public static void AsignarCriterios(DataTable tabla, KeyValuePair<string, string> criterio, CheckBoxList lista)
+        {
+            DataTable TablaFiltrada = tabla.DefaultView.ToTable(true, criterio.Key, criterio.Value);
+            lista.DataSource = TablaFiltrada;
+            lista.DataValueField = criterio.Key;
+            lista.DataTextField = criterio.Value;
+            lista.DataBind();
+        }
+
+
+        public static DataTable FiltrarTablaCriterios(DataTable tabla, GridView GrillaSalida, string Criterio, List<string> parametros)
+        {
+            DataTable TablaFiltrada;
+            DataView vista = tabla.DefaultView;
+            string criterioBusqueda = "";
+            if (parametros.Count > 0)
+            {
+                foreach (string valor in parametros)
+                {
+                    criterioBusqueda += Criterio + " = " + valor + " or ";
+                }
+                criterioBusqueda = criterioBusqueda.Substring(0, criterioBusqueda.LastIndexOf(" or"));
+            }
+            vista.RowFilter = criterioBusqueda;
+            TablaFiltrada = vista.ToTable();
+            //return TablaFiltrada;
+            GrillaSalida.DataSource = TablaFiltrada;
+            GrillaSalida.DataBind();
+            return TablaFiltrada;
+        }
+
+        public static bool Existencia(string nombre, List<KeyValuePair<string, string>> lista)
+        {                                
+            return true;
+        }
+
+        public static bool Existencia(string nombre, DataTable datos)
+        {            
+            DataView vista = datos.Copy().DefaultView;
+            vista.RowFilter = "Item = '" + nombre + "'";
+            if (vista.Count > 0)
+                return true;
+            else
+                return false;
+        }
+
+        #region Old Code 
+
+        public static ListItem ObtenerItemSeleccione()
+        {
+            ListItem sItem = new ListItem();
+            sItem.Text = " -- SELECCIONE -- ";
+            sItem.Value = "0";
+            sItem.Selected = true;
+            return sItem;
+        }
+
+        public static DropDownList RetornaCombo(string value, string text, DropDownList ddl)
+        {
+            ddl.DataValueField = value;
+            ddl.DataTextField = text;
+            ddl.DataBind(); 
+            ddl.Items.Add(ObtenerItemSeleccione());
+            return ddl;
+        }
+        
+        public static DropDownList RetornaCombo(DropDownList ddl)
+        {           
+            ddl.Items.Add(ObtenerItemSeleccione());
+            return ddl;
+        }
+
+        #endregion
+
+    }
+}
