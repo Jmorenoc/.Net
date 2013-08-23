@@ -1,0 +1,53 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using Corp.Negocio;
+
+namespace ControlFI.Web.Formularios.Modulos
+{
+    public partial class Totalizador : System.Web.UI.Page
+    {
+        private GestorLineas Gestor;
+        private DataTable datos;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Gestor = new GestorLineas();
+            if (!IsPostBack)
+            {
+                this.Session["dt"] = null;
+                Enlazar();
+            }
+        }
+        
+        private void Enlazar()
+        {
+            if (this.Session["dt"] == null)
+            {
+                datos = CargarDatos();
+            }
+            else
+            {
+                datos = this.Session["dt"] as DataTable;
+            }
+            GrvTotaliza.DataSource = datos;
+            GrvTotaliza.DataBind();
+        }
+
+        private DataTable CargarDatos()
+        {
+            datos = Gestor.ObtenerResumen();
+            return datos;
+        }
+
+        // funcionamiento del boton, pendiente
+        protected void BtnAgregar_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
