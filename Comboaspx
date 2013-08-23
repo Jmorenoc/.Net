@@ -1,0 +1,35 @@
+<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="ComboBox.ascx.cs" Inherits="ControlFI.Web.Formularios.UserControls.ComboBox" %>
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="asp" %>
+<style>
+    .Combo{
+        border: 1px solid #1A78BE;        
+        width: 204px;    
+        font-size: 10;
+        color: #1A78BE;
+        font: arial;
+    }
+</style>
+<script type="text/javascript">
+    function callme() 
+    {
+        element = document.getElementById('<%=ListaItems.ClientID %>');
+        if (element.value != "")
+        { 
+            str = element.options[element.selectedIndex].text;
+            document.getElementById('<%=TextBox1.ClientID %>').value = str;
+        }
+    }
+</script>
+
+<asp:UpdatePanel ID="UpdatePanel1" runat="server">
+        <ContentTemplate>
+            <asp:TextBox ID="TextBox1" runat="server" Text="Escoge" 
+                CssClass="Combo" Width="200px" />
+            <div style="padding: 4px; margin-left:2px" id="ItemsDiv" runat="server">
+                <asp:ListBox ID="ListaItems" runat="server" onclick="callme()" AutoPostBack="true"
+                    CssClass="Combo" Width="200px"
+                    OnSelectedIndexChanged="ListaItems_SelectedIndexChanged" Visible="false" />
+            </div>
+            <asp:DropDownExtender ID="DdeCombo" runat="server" TargetControlID="TextBox1" DropDownControlID="ItemsDiv" />
+        </ContentTemplate>
+    </asp:UpdatePanel>
