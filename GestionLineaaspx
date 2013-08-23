@@ -1,0 +1,226 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="GestionLCR.aspx.cs" Inherits="ControlFI.Web.Formularios.Modulos.GestionLCR" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server" >
+    <script type="text/javascript">
+        function AsignaValor(sender, event) {
+            document.getElementById("<%=TxtValor.ClientID %>").value = event.get_value();
+            document.getElementById("<%=BtnBusqueda.ClientID %>").click();
+        }
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+    
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+    
+    <hr />
+    
+    <asp:MultiView ID="MvPagina" runat="server">
+        <asp:View ID="ViwDatos" runat="server">
+
+                <div class="MargenBase">        
+                <div class="MargenIzquierdo" style="height:50px; width:80%">
+                    <div class="Izquierda">
+                        <div>
+                            <asp:Label ID="LblBusqueda" runat="server" Text="Búsqueda Cliente" CssClass="Label" />
+                        </div>
+                    </div>
+                    <div class="Izquierda">
+                        <asp:TextBox ID="TxtBusqueda" runat="server" CssClass="TextBoxBusqueda" />
+                        <asp:AutoCompleteExtender ID="AutoCompleteCliente" runat="server" 
+                            TargetControlID="TxtBusqueda" EnableCaching="true"
+                            CompletionSetCount="1" CompletionInterval="200"
+                            ServiceMethod="CargarClientes" UseContextKey="True"
+                            OnClientItemSelected="AsignaValor" FirstRowSelected="true" />
+                        <asp:TextBox ID="TxtValor" runat="server" Text="" 
+                            ontextchanged="TxtValor_TextChanged" style="display:none" />
+                    </div>
+                    <div class="Izquierda" style="display:none">
+                        <asp:ImageButton ID="BtnBusqueda" runat="server" Text="" OnClick="BtnBusqueda_Click" ImageUrl="~/Graficos/Icons/Spotlight Blue Button.png" Height="20px" Width="20px" />                
+                    </div>
+                    <div class="Derecha">
+                        <asp:CustomValidator ID="ValidadorPagina" runat="server" onservervalidate="ValidadorPagina_ServerValidate" />
+                    </div>
+                </div>    
+    
+                <div class="Centrado">
+                    <asp:UpdatePanel ID="UpdatePanel1" runat="server">            
+                        <ContentTemplate>
+                            <asp:TabContainer ID="Contenedor" runat="server" ActiveTabIndex="0" 
+                                CssClass="MyTabs" Width="688" Height="210px">
+
+                                <asp:TabPanel ID="PanelLinea" runat="server" HeaderText="Detalle Línea">
+                                    <ContentTemplate>
+                                        <div class="MargenLateral">   
+                                            <div class="MargenSuperior">                     
+                                                <div style="Height: 125px">                                            
+                                                    <div class="Izquierda" style="width:48%">
+                                                        <div class="Headers" style="width:99%">
+                                                            <asp:Label ID="Label1" runat="server" Text="Línea Principal" style="vertical-align:middle"></asp:Label>
+                                                        </div>       
+                                                        <div class="Despejar"></div>          
+                                                        <div>
+                                                            <asp:ListBox ID="Lista1" runat="server" CssClass="SubLista" AutoPostBack="True" 
+                                                                onselectedindexchanged="Lista1_SelectedIndexChanged" ondatabound="Lista1_DataBound" />
+                                                        </div>
+                                                    </div>                           
+                                            
+                                                    <div class="Derecha" style="width:48%">
+                                                                                       
+                                                        <div class="Headers" style="width:99%">
+                                                            <asp:Label ID="Label2" runat="server" Text="Sub Líneas" style="vertical-align:middle"></asp:Label>
+                                                        </div>                                                                                                                                                                                
+                                                        <div class="Despejar"></div>          
+                                                        <div>
+                                                            <asp:ListBox ID="Lista2" runat="server" CssClass="SubLista" AutoPostBack="True" 
+                                                                onselectedindexchanged="Lista2_SelectedIndexChanged" 
+                                                                ondatabound="Lista2_DataBound" />
+                                                        </div>                                            
+                                                    </div>                                            
+                                                </div>                                        
+                                                <div class="MargenSuperior">
+                                        
+                                                <asp:UpdatePanel ID="UpdatePanel2" runat="server">
+                                                    <ContentTemplate>
+
+                                                        <asp:GridView 
+                                                            ID="ListaLineas" runat="server" CssClass="GrillaMenor" AutoGenerateColumns="False" 
+                                                            onrowdatabound="ListaLineas_RowDataBound" 
+                                                            onrowediting="ListaLineas_RowEditing" 
+                                                            onrowcancelingedit="ListaLineas_RowCancelingEdit" 
+                                                            onrowupdating="ListaLineas_RowUpdating"  >
+                                                            <Columns> 
+                                                                <asp:CommandField 
+                                                                    HeaderText = "Accion" ButtonType="Image" ShowEditButton="True" 
+                                                                    EditImageUrl="~/Graficos/Icons/Write Document.png" 
+                                                                    UpdateImageUrl="~/Graficos/Icons/Save Blue Button.png"
+                                                                    CancelImageUrl="~/Graficos/Icons/Minus Red Button.png" >
+                                                                <ControlStyle Height="18px" Width="18px" />
+                                                                <ItemStyle HorizontalAlign="Center" />
+                                                                </asp:CommandField>
+
+                                                                <asp:TemplateField HeaderText="Descripción">
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblNombre" runat="server" Text='<%# Bind("Nombre") %>' />
+                                                                    </ItemTemplate>                                                        
+                                                                </asp:TemplateField>
+                            
+                                                                <asp:TemplateField HeaderText="Moneda">
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblMoneda" runat="server" Text='<%# Bind("Moneda") %>' />
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+                                
+                                                                <asp:TemplateField HeaderText="Disponible">
+                                                                    <EditItemTemplate>
+                                                                        <asp:TextBox ID="MontoDisponible" runat="server" CssClass="Campo" Text='<%# Bind("Disponible")%>' />
+                                                                    </EditItemTemplate>
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblDisponible" runat="server" Text='<%# Bind("Disponible") %>' />
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+                                                           
+                                                                <asp:TemplateField HeaderText="Utilizado">
+                                                                    <EditItemTemplate>
+                                                                        <asp:TextBox ID="MontoUtilizado" runat="server" CssClass="Campo" Text='<%# Bind("Utilizado") %>' />
+                                                                    </EditItemTemplate>
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblUtilizado" runat="server" Text='<%# Bind("Utilizado") %>' />
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+
+                                                                <asp:TemplateField HeaderText="Asignado">
+                                                                    <EditItemTemplate>
+                                                                        <asp:TextBox ID="MontoAsignado" runat="server" CssClass="Campo" Text='<%# Bind("Asignado") %>' />
+                                                                    </EditItemTemplate>
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblAsignado" runat="server" Text='<%# Bind("Asignado") %>' />
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+
+                                                                <asp:TemplateField HeaderText="Exceso">
+                                                                    <EditItemTemplate>
+                                                                        <asp:TextBox ID="MontoExceso" runat="server" CssClass="Campo" Text='<%# Bind("Exceso") %>' />
+                                                                    </EditItemTemplate>
+                                                                    <ItemTemplate>
+                                                                        <asp:Label ID="lblExceso" runat="server" Text='<%# Bind("Exceso") %>' />
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+
+                                                                <asp:TemplateField HeaderText="Bloqueo">
+                                                                    <ItemTemplate>                                        
+                                                                        <center>                                            
+                                                                            <asp:ImageButton ID="BtnBloqueo" runat="server" ImageUrl="~/Graficos/Icons/Good mark.png" Height="15px" Width="15px" OnClick="BtnBloqueo_Click" />
+                                                                        </center>
+                                                                    </ItemTemplate>
+                                                                </asp:TemplateField>
+                                                            </Columns>
+                                                        </asp:GridView>
+
+                                                    </ContentTemplate>
+                                                </asp:UpdatePanel>
+
+                                                </div>
+                                            </div>   
+                                        </div>
+                                    </ContentTemplate>
+                                </asp:TabPanel>
+
+                                <asp:TabPanel ID="PanelCliente" runat="server" HeaderText="Detalle Cliente" >
+                                    <ContentTemplate>
+                                        <div class="Centrado" style="width:550px">
+                                            <div style="height:50px"></div>
+                                            <div id="ContenidoDetalle" style="display:inline-block; margin-left:auto; margin-right:auto;">
+                                                <div id="Izquierda" style="width:250px" class="Izquierda">                            
+                                                    <div>
+                                                        <asp:Label ID="LblRut" runat="server" Text="Rut"> </asp:Label>
+                                                        <asp:TextBox ID="TxbRut" runat="server" Enabled="false" CssClass="TextBoxDato"></asp:TextBox>
+                                                    </div>    
+                                                    <div class="Separador"></div>                            
+                                                    <div>
+                                                        <asp:Label ID="LblGAsociada" runat="server" Text="Garantía Asociada"></asp:Label>
+                                                        <asp:TextBox ID="TxtGAsociada" runat="server" Enabled="false" CssClass="TextBoxDato"></asp:TextBox>
+                                                    </div>
+                                                    <div class="Separador"></div>
+                                                    <div>
+                                                        <asp:Label ID="LblGEfectiva" runat="server" Text="Garantía Efectiva"></asp:Label>
+                                                        <asp:TextBox ID="TxtGEfectiva" runat="server" Enabled="false" CssClass="TextBoxDato"></asp:TextBox>
+                                                    </div>
+                                                </div>
+
+                                                <div id="Derecha" style="width:280px" class="Derecha">
+                                                    <div style="text-align:left; margin-left: 25px">                            
+                                                        <div>
+                                                            <asp:Label ID="LblClasificacion" runat="server" Text="Clasificacion"></asp:Label>
+                                                            <asp:TextBox ID="TxtClasificacion" runat="server" Enabled="false" CssClass="TextBoxDato"></asp:TextBox>
+                                                        </div>
+                                                        <div class="Separador"></div>                            
+                                                        <div>
+                                                            <asp:Label ID="LblGConsultiva" runat="server" Text="Garantía Constitutiva"></asp:Label>
+                                                            <asp:TextBox ID="TxtGConsultiva" runat="server" Enabled="false" CssClass="TextBoxDato"></asp:TextBox>
+                                                        </div>
+                                                    </div>                        
+                                                </div>
+                                            </div>   
+                                        </div>
+                                    </ContentTemplate>            
+                                </asp:TabPanel>  
+                        
+                            </asp:TabContainer>
+                        </ContentTemplate>         
+                    </asp:UpdatePanel>                      
+                </div>     
+            </div>       
+
+        </asp:View>
+        <asp:View ID="ViwNoDatos" runat="server">
+            <div class="TextoCentrado">                
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>
+        </asp:View>
+    </asp:MultiView>
+        
+</asp:Content>
