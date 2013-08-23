@@ -1,0 +1,206 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Corp.Negocio;
+using System.Data;
+
+namespace ControlFI.Web.Formularios.Modulos
+{
+    public partial class CreacionControl : System.Web.UI.Page
+    {
+        private GestorMantenedores Gestor;
+        private DataTable datos;
+        private Dictionary<int, string> Existentes;
+        private int TipoConcepto;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {            
+            Gestor = new GestorMantenedores();
+            if (!IsPostBack)
+            {
+                this.Session["dt"] = null;
+                this.Session["dc"] = null;
+                TipoConcepto = 1;
+                Enlazar();
+                ControlesExistentes();
+            }
+        }
+
+        private void Enlazar()
+        {
+            if (this.Session["dt"] == null)
+            {
+                datos = CargaDatos();
+                this.Session["dt"] = datos;                
+            }
+            else
+            {
+                datos = this.Session["dt"] as DataTable; 
+            }
+            if (datos.Rows.Count > 0)
+            {
+                MvPagina.ActiveViewIndex = 0;
+                Utiles.Utiles.AsignarCriterios(datos, new KeyValuePair<string, string>("ConceptoId", "Concepto"), ListaConceptos);
+                GrillaItems.DataSource = datos;
+                GrillaItems.DataBind();
+            }
+            else
+            {
+                MvPagina.ActiveViewIndex = 1;
+            }
+        }
+
+        private void ControlesExistentes()
+        {
+            if (this.Session["dc"] == null)
+            {
+                Existentes = Gestor.ObtenerControles();
+                this.Session["dc"] = Existentes;
+            }
+            else
+            {
+                Existentes = this.Session["dc"] as Dictionary<int, string>;
+            }
+        }
+
+        private DataTable CargaDatos()
+        {
+            DataTable datos = Gestor.ObtenerItemConcepto(TipoConcepto);            
+            if (datos == null)
+            {
+                GrillaItems.Visible = false;
+                mensaje.Text = "No fue posible encontrar los datos";
+                datos = new DataTable();
+            }
+            return datos;
+        }
+
+        #region Capitalize
+
+        protected void GrillaItems_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            for (int i = 1; i < e.Row.Cells.Count; i++)
+            {
+                e.Row.Cells[i].Text = Utiles.Utiles.UppercaseFirst(e.Row.Cells[i].Text);
+            }
+        }
+
+        protected void ListaConceptos_DataBound(object sender, EventArgs e)
+        {
+            foreach (ListItem item in ListaConceptos.Items)
+            {
+                item.Text = Utiles.Utiles.UppercaseFirst(item.Text);
+            }
+        }
+
+        #endregion
+
+        protected void ListaConceptos_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string opcion = ListaConceptos.SelectedValue;
+            IEnumerable<ListItem> selectedItems = ListaConceptos.Items.Cast<ListItem>().Where(x => x.Selected);
+            List<string> criterios = new List<string>();
+
+            foreach (ListItem item in selectedItems)
+            {
+                criterios.Add(item.Value);
+            }
+            datos = this.Session["dt"] as DataTable;
+
+            DataTable TablaFiltrada = Utiles.Utiles.FiltrarTablaCriterios(datos.Copy(), GrillaItems, "ConceptoId", criterios);            
+            this.Session["df"] = TablaFiltrada;
+        }
+
+        protected void BtnCrear_Click(object sender, EventArgs e)
+        {
+            string nombre = TxtNombre.Text;
+            if (Page.IsValid)
+            {
+                DataTable filtrado = this.Session["df"] as DataTable;
+                List<int> Items = new List<int>();
+
+                foreach (GridViewRow row in GrillaItems.Rows)
+                {
+                    CheckBox chk = row.Cells[0].FindControl("chbSelector") as CheckBox;
+                    if (chk != null && chk.Checked)
+                    {
+                        int Indice = row.DataItemIndex;
+                        Items.Add(Convert.ToInt32(filtrado.Rows[Indice]["ItemId"]));
+                    }
+                    var developing = this.Session["DEVELOPING"];
+                    if(!Convert.ToBoolean(developing))
+                        Gestor.GuardarControl(nombre, Items);
+                    Alerta.Accion("El control " + nombre + " ha sido guardado exitosamente");
+                }
+            }
+        }
+
+        private void Limpiar()
+        {
+            this.Session["dt"] = null;
+            this.Session["dc"] = null;            
+            TxtNombre.Text = "";
+            Enlazar();
+        }
+
+        #region Validacion
+
+        protected void Validador_ServerValidate(object source, ServerValidateEventArgs args)
+        {
+            string nombre = TxtNombre.Text;
+            if (NombreValido(nombre))
+            {
+                if (ExisteSeleccion())
+                {
+                    args.IsValid = true;
+                }
+                else
+                {
+                    Alerta.Accion("No haz escogido Items.");                    
+                    args.IsValid = false;                    
+                }
+            }
+            else
+            {
+                Alerta.Accion("Ya existe un Control con este nombre.");
+                args.IsValid = false;
+            }
+        }
+
+        private bool ExisteSeleccion()
+        {
+            //if (ListaConceptos.Items.Cast<ListItem>().Where(x => x.Selected).Count() > 0 &&
+                if(GrillaItems.Rows.Cast<GridViewRow>().Where(x => ((CheckBox)x.Cells[0].FindControl("chbSelector")).Checked == true).Count() > 0)
+                return true;
+            else
+                return false;
+        }
+
+        private bool NombreValido(string nombre)
+        {
+            ControlesExistentes();
+            var match = Existentes.Where(x => x.Value.ToLowerInvariant().Equals(nombre.ToLowerInvariant()));
+            if (match.Count() > 0)
+                return false;
+            else
+                return true;
+        }
+
+        #endregion
+
+        private bool ExistenDatos(DataTable datos)
+        {
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+}
