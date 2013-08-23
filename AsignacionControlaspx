@@ -1,0 +1,145 @@
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeBehind="AsignacionControl.aspx.cs" Inherits="ControlFI.Web.Formularios.Modulos.AsignacionControl" %>
+<%@ Register assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" tagprefix="asp" %>
+<%@ Register src="../UserControls/VistaSinDatos.ascx" TagName="Data" TagPrefix="pag" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="HeadContent" runat="server">
+    <script type="text/javascript">
+        function AsignaValor(source, event) {
+            document.getElementById("<%=TxtValor.ClientID %>").value = event.get_value();
+            document.getElementById("<%=BtnFiltrar.ClientID %>").click();
+        }
+
+        function pageLoad() {
+
+            var mpe = $find("MPE");
+            if (mpe != null)
+            { 
+                if (mpe.value != "") { 
+                    mpe.add_shown(onShown);
+                }
+            }
+        }
+
+        function onShown() {
+            var background = $find("MPE")._backgroundElement;
+            background.onclick = function () { $find("MPE").hide(); }
+        }        
+    </script>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="MainContent" runat="server">
+
+    <div class="Mapa">
+        <asp:SiteMapPath ID="SiteMapPath1" runat="server" />
+    </div>
+
+    <hr />
+
+    <asp:MultiView ID="MvPagina" runat="server">
+        <asp:View ID="ViwDatos" runat="server">  
+              
+            <div class="MargenMenor">        
+                <div class="Centrado MargenInterior Borde" style="width:45%; height:80px">
+                    <asp:UpdatePanel ID="UpdatePanel1" runat="server">
+                        <ContentTemplate>
+                            <div class="Izquierda" style="width:40%">
+                                <asp:RadioButtonList ID="OpcionSecundaria" runat="server" CssClass="Choice" AutoPostBack="true" 
+                                    onselectedindexchanged="OpcionSecundaria_SelectedIndexChanged">
+                                    <asp:ListItem Text="Nombre del Cliente" />
+                                    <asp:ListItem Text="Controles" />
+                                </asp:RadioButtonList>
+                            </div>
+                            <div class="Derecha" style="width:60%">                
+                                <asp:TextBox ID="NombreCliente" runat="server" CssClass="TextBox" />
+                                <asp:AutoCompleteExtender ID="AtcCliente" runat="server" ServiceMethod="CargarClientes"
+                                    TargetControlID="NombreCliente" EnableCaching="false" CompletionSetCount="10" CompletionInterval="200"
+                                    MinimumPrefixLength="3" FirstRowSelected="true"
+                                    UseContextKey="true" OnClientItemSelected="AsignaValor" />
+                                    <asp:TextBox ID="TxtValor" runat="server" Text="" style="display:none" />
+                                <div class="Despejar"></div>
+                                <asp:TextBox ID="Controles" runat="server" CssClass="TextBox" Width="85%" />
+                                <asp:ImageButton ID="BtnControles" runat="server" ImageUrl="~/Graficos/Icons/Spotlight Blue Button.png" Width="20px" Height="20px"/>                            
+                                <div class="Despejar"></div>
+                                <asp:Button ID="BtnFiltrar" Text="Filtrar" runat="server" CssClass="Accion" 
+                                        onclick="BtnFiltrar_Click" />
+                            </div>
+                        </ContentTemplate>
+                    </asp:UpdatePanel>
+                </div>        
+            </div>
+
+            <asp:MultiView ID="ViwResultado" runat="server">
+                <asp:View ID="ViwGrilla" runat="server">
+
+                    <div class="MargenSuperior">
+                        <div class="Centrado" style="width:70%; height:150px;">
+                            <asp:Panel ID="PanelPrincipal" runat="server" ScrollBars="Auto" Height="100%" Width="100%" >                
+                                <asp:UpdatePanel ID="Panel" runat="server">
+                                    <ContentTemplate>
+                                        <asp:GridView ID="TblControles" runat="server" AutoGenerateColumns="false" 
+                                            CssClass="GrillaMenor" ShowHeaderWhenEmpty="false">
+                                            <AlternatingRowStyle CssClass="GrillaAlternada" />                            
+                                            <Columns>
+                            
+                                                <asp:TemplateField HeaderText="Cliente">                    
+                                                    <EditItemTemplate>
+                                                        <asp:TextBox ID="Cliente" runat="server" Text='<%# Bind("Cliente") %>'></asp:TextBox>
+                                                    </EditItemTemplate>
+                                                    <ItemTemplate>
+                                                        <asp:Label ID="LblCliente" runat="server" Text='<%# Bind("Cliente") %>' ></asp:Label>
+                                                    </ItemTemplate>
+                                                </asp:TemplateField>
+
+                                                <asp:TemplateField HeaderText="Control">
+                                                    <EditItemTemplate>
+                                                        <asp:DropDownList ID="Selector" runat="server" Text='<%# Bind("Control") %>'></asp:DropDownList>
+                                                    </EditItemTemplate>
+                                                    <ItemTemplate>
+                                                        <asp:Label ID="LblControl" runat="server" Text='<%# Bind("Control") %>'></asp:Label>
+                                                    </ItemTemplate>
+                                                </asp:TemplateField>
+
+                                                <asp:CommandField
+                                                    HeaderText="Acción"
+                                                    ControlStyle-Height="18" ControlStyle-Width="18"
+                                                    ShowDeleteButton="true" ButtonType="Image" DeleteImageUrl="~/Graficos/Icons/Minus Red Button.png"
+                                                    ShowEditButton="true" EditImageUrl="~/Graficos/Icons/Write Document.png"
+                                                    ShowCancelButton="false" UpdateImageUrl="~/Graficos/Icons/Save Blue Button.png">
+                                                    <HeaderStyle Width="130" HorizontalAlign="Center"/>
+                                                    <ItemStyle HorizontalAlign="Center" />
+                                                </asp:CommandField>
+                                            </Columns>                            
+                                        </asp:GridView>
+                                    </ContentTemplate>
+                                </asp:UpdatePanel>
+                            </asp:Panel>
+                        </div>        
+                    </div>   
+
+                    <div class="MargenSuperior">
+                        <div class="Centrado" style="width:60%">            
+                            <div class="Derecha">
+                                <asp:Button ID="Guardar" runat="server" CssClass="Accion" Text="Guardar" />
+                            </div>
+                        </div>
+                    </div>
+
+                </asp:View>
+
+                <asp:View ID="ViwNoData" runat="server">                                    
+                    <div class="TextoCentrado">                
+                        <pag:Data ID="UscMensajeInterno" runat="server" />
+                    </div>
+                </asp:View>
+            </asp:MultiView>
+
+        </asp:View>
+
+        <asp:View ID="ViwNoDatos" runat="server">
+            <%--<div class="TextoCentrado">                
+                <pag:Data ID="UscMensaje" runat="server" />
+            </div>--%>
+        </asp:View>
+
+    </asp:MultiView>
+    
+</asp:Content>
