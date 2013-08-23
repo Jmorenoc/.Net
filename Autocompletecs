@@ -1,0 +1,45 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace ControlFI.Web.Formularios.UserControls
+{
+    public partial class AutoComplete : System.Web.UI.UserControl
+    {
+        private event EventHandler OnSearch;
+        private static List<KeyValuePair<string, string>> datos {get; set;} 
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            //datos = this.Session["ClienteLcr"] as List<KeyValuePair<string, string>>;
+        }
+
+        [System.Web.Services.WebMethod]
+        [System.Web.Script.Services.ScriptMethod]
+        public static string[] CargarClientes(string prefixText, int count)
+        {
+            List<string> Lista_Clientes = new List<string>();
+            var nuevos = datos.Where(x => x.Key.ToUpperInvariant().Contains(prefixText.ToUpperInvariant())).Take(5);
+
+            foreach (KeyValuePair<string, string> item in nuevos)
+            {
+                Lista_Clientes.Add(AjaxControlToolkit.AutoCompleteExtender.CreateAutoCompleteItem(item.Key, item.Value));
+            }
+            return Lista_Clientes.ToArray();
+        }
+
+        protected void BtnBusqueda_Click(object sender, EventArgs e)
+        {
+            EventHandler handler = OnSearch;
+            if (handler != null) handler(this, e);
+        }
+
+        public int SelectedId
+        {
+            get { return Convert.ToInt32(TxtId); }
+        }
+    }
+}
