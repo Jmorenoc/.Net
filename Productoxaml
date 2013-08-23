@@ -1,0 +1,279 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Corp.Negocio;
+using System.Data;
+
+namespace ControlFI.Web.Mantenedores
+{
+    public partial class Productos : System.Web.UI.Page
+    {
+        private GestorMantenedores gestor;
+        private DataSet datos;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            gestor = new GestorMantenedores();
+            if (!Page.IsPostBack)
+            {
+                this.Session["ds"] = null;
+                this.Session["dt"] = null;
+                Choice.SelectedIndex = 0;
+                NombreProducto.Enabled = true;
+                Combo.Deshabilitar();
+                Combo.NormalizarTexto = true;
+                NombreProducto.Focus();                
+                Bind();
+                CreaTabla();
+                CargaSelector();
+            }
+            else
+            {   
+                Bind();                
+            }
+        }
+
+        private DataSet CargaProductos()
+        {            
+            DataSet grupos = gestor.Producto_Obtiene_Tablas();
+            return grupos;
+        }
+
+        private void Bind()
+        {
+            if (this.Session["ds"] == null)
+            {
+                datos = CargaProductos();
+                this.Session["ds"] = datos;
+                CargaSelector();
+            }
+            else
+            {
+                datos = this.Session["ds"] as DataSet;                
+                CreaTabla();
+            }
+            ExistenDatos(datos);
+        }
+
+        private void CreaTabla()
+        {
+            DataTable grupo = datos.Tables[0];
+            DataTable instrumento = datos.Tables[1];
+
+            TableRow fila = new TableRow();
+            TableHeaderRow cabecera = new TableHeaderRow();
+            
+            //CheckBox chb = new CheckBox();
+            //chb.Text = "Todos";
+            //cabecera.Controls.Add(chb);
+
+            foreach (DataRow row in grupo.Rows)
+            {
+                TableCell celda = new TableCell();
+                celda.Text = row["Descripcion"].ToString();
+                cabecera.Cells.Add(celda);
+            }
+            TablaProductos.Rows.Add(cabecera);
+            TablaProductos.Rows[0].TableSection = TableRowSection.TableHeader;
+            TablaProductos.Rows[0].CssClass = "Cabecera";
+            
+            int idGrupo = 0;
+            foreach (DataRow row in grupo.Rows)
+            {
+                TableCell celda = new TableCell();
+                int id = Convert.ToInt16(row["id"]);
+                DataView view = instrumento.DefaultView;
+                view.RowFilter = "GrupoInstrumento = " + id;
+
+                CheckBoxList lista = new CheckBoxList();
+                
+                lista.ID = row["Descripcion"].ToString();
+                lista.CellPadding = 0;
+                lista.CellSpacing = 0;
+
+                lista.DataSource = view;
+                lista.DataTextField = "Descripcion";                
+                lista.DataValueField = "Id";                
+                lista.DataBind();
+                
+                celda.Controls.Add(lista);
+                fila.Cells.Add(celda);
+                idGrupo += 1;
+            }
+            TablaProductos.Rows.Add(fila);
+        }
+
+        public void CambiarEstado(DataTable respuesta)
+        {
+            datos = this.Session["ds"] as DataSet;
+            DataTable grupo = datos.Tables[0];
+            TableRow fila = TablaProductos.Rows[1];
+            
+            List<int> Instrumentos = new List<int>();
+            for (int i = 0; i < fila.Cells.Count; i++)
+            {
+                CheckBoxList lista = (CheckBoxList)fila.Cells[i].FindControl(grupo.Rows[i]["Descripcion"].ToString());                
+                if (lista != null)
+                {
+                    clearAll(lista);
+                    if (respuesta != null)
+                    { 
+                        DataView vista = respuesta.DefaultView;
+                        vista.RowFilter = "GrupoInstrumentoId = "+ (i + 1);
+                        foreach (DataRowView r in vista)
+                        {
+                            string valor = r[2].ToString();
+                            if (lista.Items.FindByValue(valor) != null)
+                            {
+                                lista.Items.FindByValue(valor).Selected = true;
+                            }
+                        }
+                    }
+                }                
+            }            
+        }
+
+        private void clearAll(CheckBoxList lista)
+        { 
+            foreach(ListItem i in lista.Items)
+            {
+                i.Selected = false;
+            }
+        }
+                        
+        private void CargaSelector()
+        {
+            DataTable Productos = datos.Tables[2];
+            Combo.CargaLista(Productos, "Item", "Id");
+            Combo.DefaultText = "Escoge un Producto";
+        }
+        
+        protected void AlternaEstado(object sender, EventArgs e)
+        {
+            CambiaEstado();
+        }
+
+        private void CambiaEstado()
+        {        // Crear un producto nuevo.
+            if(Choice.SelectedIndex != 0)
+            {
+                Combo.Habilitar();                
+            }
+            else // Crear a partir de un producto existente.
+            {                
+                Combo.Deshabilitar();
+                NombreProducto.Focus();                                
+                // procedimiento para eliminar seleccion
+                datos = this.Session["ds"] as DataSet;
+                DataTable grupo = datos.Tables[0];
+                TableRow fila = TablaProductos.Rows[1];
+
+                List<int> Instrumentos = new List<int>();
+                for (int i = 0; i < fila.Cells.Count; i++)
+                {
+                    CheckBoxList lista = (CheckBoxList)fila.Cells[i].FindControl(grupo.Rows[i]["Descripcion"].ToString());                    
+                    clearAll(lista);
+                }
+            }
+        }
+        // IMPORTANT SHIT
+        protected void Guardar_Click(object sender, EventArgs e)
+        {           
+            
+                if (ExisteNombre(NombreProducto.Text))
+                {
+                    datos = this.Session["ds"] as DataSet;
+                    DataTable grupo = datos.Tables[0];
+                    DataTable instrumentos = datos.Tables[1];
+                    TableRow fila = TablaProductos.Rows[1];  // no hay tabla
+
+                    List<int> Instrumentos = new List<int>();
+                    for (int i = 0; i < fila.Cells.Count; i++)
+                    {
+                        CheckBoxList lista = (CheckBoxList)fila.Cells[i].FindControl(grupo.Rows[i]["Descripcion"].ToString());
+                        DataTable ds = lista.DataSource as DataTable;
+                        if (lista != null)
+                        {
+                            int encontrado = lista.Items.Count;
+                            Instrumentos.AddRange(EncuentraIndices(lista));
+                        }
+                    }
+
+                    string nombre = NombreProducto.Text;
+                    //int id = Convert.ToInt16(SelectorProducto.SelectedValue);
+
+                    if (Instrumentos.Count > 0)
+                    {
+                        gestor.Producto_Almacenar(nombre, Instrumentos);
+                    }
+                    Alerta.Accion("Producto Creado Exitosamente");
+                    NombreProducto.Text = "";
+                    fila = TablaProductos.Rows[1];
+                    Instrumentos = new List<int>();
+                    for (int i = 0; i < fila.Cells.Count; i++)
+                    {
+                        CheckBoxList lista = (CheckBoxList)fila.Cells[i].FindControl(grupo.Rows[i]["Descripcion"].ToString());
+                        clearAll(lista);
+                    }
+                }
+                else
+                {
+                    Alerta.Accion("El nombre del producto ya existe");
+                }
+            
+            datos = CargaProductos();
+            CargaSelector();
+        }       
+
+        private List<int> EncuentraIndices(CheckBoxList lista)
+        {
+            List<int> indices = new List<int>();
+            foreach (ListItem item in lista.Items)
+            {
+                if (item.Selected)
+                {                    
+                    indices.Add(Convert.ToInt16(item.Value));
+                }
+            }
+            return indices;
+        }
+
+        private bool ExisteNombre(string nombre)
+        {
+            DataSet set = this.Session["ds"] as DataSet;
+            DataTable datos = set.Tables[2];
+            return Utiles.Utiles.Existencia(nombre, datos);            
+        }
+
+        public void Combo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //ListItem item = Combo.SelectedItem as ListItem;
+            
+            //int id = Convert.ToInt16(item.Value);
+            int id = Convert.ToInt16(Combo.SelectedValue);
+            datos = this.Session["ds"] as DataSet;
+            if (id != -1)
+            {
+                DataTable respuesta = new DataTable();
+                respuesta = gestor.Producto_Obtiene(id);
+                CambiarEstado(respuesta);
+            }
+        }
+
+        private void ExistenDatos(DataSet SetDatos)
+        {
+            MvPagina.ActiveViewIndex = 0;
+            //foreach (DataTable datos in SetDatos.Tables)
+            //{                
+            //    if (datos == null || datos.Rows.Count == 0)
+            //    {
+            //        MvPagina.ActiveViewIndex = 1;
+            //        break;
+            //    }
+            //}
+        }
+    }
+}
