@@ -1,0 +1,324 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using Corp.Negocio;
+using System.Drawing;
+
+namespace ControlFI.Web.Formularios.Mantenedores
+{
+    public partial class Items : System.Web.UI.Page
+    {
+        private GestorMantenedores gestor;
+        private DataTable datos;        
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            gestor = new GestorMantenedores();
+            if (!Page.IsPostBack)
+            {
+                ListaItems.EditIndex = -1;
+                this.Session["dt"] = null;
+                BindGrid();
+                Combo.NormalizarTexto = true;
+                CargaConceptos();                
+            }
+        }
+
+        #region Carga de Datos
+
+        private void CargaConceptos()
+        { 
+            int Entidad = Convert.ToInt16(this.Session["Entidad"]);
+            DataTable conceptos = gestor.Lista_Concepto(Entidad);
+            Combo.CargaLista(conceptos, "Descripcion", "id");
+            FiltrarTabla(datos, "Concepto", Combo.SelectedValue);
+            ExistenDatos(conceptos);
+        }
+
+        private DataTable CargaItems()
+        {
+            DataTable items = gestor.ListarItem(1);            
+            items.Columns.Add("Estado", typeof(int));
+            items.Columns[3].DefaultValue = 0;
+            foreach (DataRow dr in items.Rows)
+            {
+                dr["Estado"] = 0;
+            }
+            return items;
+        }
+
+        private void BindGrid()
+        {
+            if (this.Session["dt"] == null)
+            {
+                datos = CargaItems();
+                this.Session["dt"] = datos;
+            }
+            else
+            {
+                datos = this.Session["dt"] as DataTable;                
+            }
+            CargaListado();            
+        }
+
+        private void CargaListado()
+        {
+            ListaItems.DataSource = datos;
+            ListaItems.DataBind();
+        }
+
+        #region Filtro                
+
+        private void FiltrarTabla(DataTable tabla, string Criterio, string Valor)
+        {
+            DataTable TablaFiltrada;
+            DataView vista = tabla.DefaultView;
+            vista.RowFilter = Criterio + " = '" + Valor + "'";
+            TablaFiltrada = vista.ToTable();            
+            ListaItems.DataSource = TablaFiltrada;
+            ListaItems.DataBind();
+            this.Session["df"] = TablaFiltrada;
+        }
+
+        protected void Combo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string Seleccionado = Combo.SelectedItem.ToString();
+            ListaItems.EditIndex = -1;
+            BindGrid();
+            FiltrarTabla(datos.Copy(), "Concepto", Seleccionado);
+            if (Seleccionado == "Producto")
+            {
+                CrearItem.Visible = false;
+            }
+            else
+            {
+                CrearItem.Visible = true;
+            }
+        }
+
+        #endregion       
+
+        protected void ListaItems_PageIndexChanging(object sender, GridViewPageEventArgs e)
+        {
+            if (ListaItems.EditIndex != -1)
+            {
+                e.Cancel = true;
+                int newPageNumber = e.NewPageIndex + 1;
+            }
+            else
+            {
+                ListaItems.PageIndex = e.NewPageIndex;
+                Combo_SelectedIndexChanged(sender, e);
+            }
+        }
+                
+        protected void ListaItems_RowDataBound(object sender, GridViewRowEventArgs e)
+        {
+            if (e.Row.RowType == DataControlRowType.DataRow)
+            {                
+                DataTable dt = this.Session["dt"] as DataTable;
+                int estado = Convert.ToInt16(dt.Rows[e.Row.DataItemIndex]["Estado"]);
+                //GridViewRow dr = ListaItems.Rows[e.Row.RowIndex];
+                //estado = Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]);
+
+                DataRowView rowview = e.Row.DataItem as DataRowView;
+                //int estado = Convert.ToInt32(rowview["Estado"]);
+
+                Label NombreLabel = (Label)e.Row.FindControl("LabelDesc");
+                if (NombreLabel != null)
+                {
+                    NombreLabel.Text = Utiles.Utiles.UppercaseFirst(NombreLabel.Text);
+                }                               
+
+                if (estado != 0)
+                {
+                    IdentificaEstado(estado, e);
+                }
+            }            
+        }
+
+        private void IdentificaEstado(int estado, GridViewRowEventArgs e)
+        {
+            switch (estado)
+            {
+                // Borrar
+                case -1: { e.Row.BackColor = Color.OrangeRed; break; }
+                // Crear
+                case 1:  { e.Row.BackColor = Color.LightGreen; break; }
+                // Modificar
+                case 2:  { e.Row.BackColor = Color.LightBlue; break; }
+
+                default: { break; }
+            }
+        }
+
+        #endregion
+        
+        #region Manipulacion Datos
+
+        protected void CrearItem_Click(object sender, ImageClickEventArgs e)
+        {
+            BindGrid();
+            DataTable dt = this.Session["dt"] as DataTable;
+
+            string[] datosbase = new String[5];
+            datosbase[0] = "0";
+            datosbase[1] = "Nombre del Item";
+            datosbase[2] = Convert.ToString(Combo.SelectedIndex + 1);
+            datosbase[3] = Convert.ToString(Combo.SelectedValue);
+            datosbase[4] = "1";
+            
+            DataRow dr = dt.DefaultView.Table.NewRow();
+            dr.ItemArray = datosbase;
+            dr.BeginEdit();
+            dt.Rows.InsertAt(dr, dt.Rows.Count);
+
+            this.Session["dt"] = dt;
+            //BindGrid();
+            FiltrarTabla(dt, "Concepto", Combo.SelectedValue);            
+        }
+
+        protected void ListaItems_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            datos = this.Session["dt"] as DataTable;
+            FiltrarTabla(datos, "Concepto", Combo.SelectedValue);
+            ListaItems.EditIndex = e.NewEditIndex;
+            BindGrid();
+        }
+
+        private int getId(int indice, GridViewUpdateEventArgs e)
+        {
+            indice = ListaItems.EditIndex;
+            DataTable df = this.Session["df"] as DataTable;
+            GridViewRow dr = ListaItems.Rows[indice];
+            return Convert.ToInt16(df.Rows[dr.DataItemIndex]["Id"]);            
+        }
+        
+        protected void ListaItems_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+            string entrada = Convert.ToString(((TextBox)ListaItems.Rows[e.RowIndex].FindControl("TextBoxDesc")).Text);            
+            int id = getId(ListaItems.EditIndex, e);
+            datos = this.Session["dt"] as DataTable;
+
+            DataRow[] encontradas = datos.Select("Id = "+ id);
+
+            if (encontradas.Count() > 0)
+            {
+                encontradas[0]["Item"] = entrada;
+                encontradas[0]["ConceptoId"] = Convert.ToString(Combo.SelectedIndex + 1);
+                encontradas[0]["Concepto"] = Combo.SelectedValue;
+
+                if (Convert.ToInt16(encontradas[0]["Estado"]) == 0)
+                    encontradas[0]["Estado"] = 2;
+
+                this.Session["dt"] = datos;
+                ListaItems.EditIndex = -1;
+            }
+            BindGrid();
+        }
+
+        protected void ListaItems_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            ListaItems.EditIndex = -1;
+            BindGrid();
+        }
+
+        protected void ListaItems_RowDeleting(object sender, GridViewDeleteEventArgs e)
+        {
+            DataTable dt = this.Session["dt"] as DataTable;
+            GridViewRow dr = ListaItems.Rows[e.RowIndex];
+            int estado = Convert.ToInt16(dt.Rows[dr.DataItemIndex]["Estado"]);
+            //if (estado != 0)
+            //{
+            dt.Rows[dr.DataItemIndex]["Estado"] = -1;            
+            //}
+            //else
+            //{
+            //    if (Convert.ToInt16(dt.Rows[dr.DataItemIndex][0]) == 0)
+            //    {
+            //        dt.Rows.RemoveAt(e.RowIndex);                    
+            //    }
+            //}
+            this.Session["dt"] = dt;
+            FiltrarTabla(dt, "Concepto", Combo.SelectedValue);
+            //BindGrid();
+        }
+
+        #endregion                
+
+        protected void Guardar_Click(object sender, EventArgs e)
+        {
+            BindGrid();
+            DataTable dt = this.Session["dt"] as DataTable;
+            foreach (DataRow fila in dt.Rows)
+            {
+                int estado = Convert.ToInt16(fila["Estado"]);
+                if (estado != 0)
+                {
+                    GuardarDatos(fila, estado);
+                    Alerta.Accion("Los cambios se han guardado exitosamente");
+                    
+                    this.Session["dt"] = null;
+                    this.Session["df"] = null;
+                    BindGrid();
+                    FiltrarTabla(datos.Copy(), "Concepto", Combo.SelectedValue);
+                }
+            }
+        }
+
+        private int GuardarDatos(DataRow fila, int CodigoEstado)
+        {
+            switch (CodigoEstado)
+            {
+                // Eliminar
+                case -1: { return gestor.EliminarItem(Convert.ToInt16(fila[0]));} // implementar codigo Eliminar
+                // Crear
+                case 1:
+                    {                     
+                        return gestor.GuardarItem(fila[1].ToString(), Convert.ToInt16(fila[2]), 1);
+                    }                    
+                // Modificar
+                case 2: 
+                    {
+                        return gestor.Item_Modificar(Convert.ToInt16(fila[0]), fila[1].ToString()); 
+                    }
+                // 0 sin cambios
+                default: { return 0; }
+            }
+        }
+        
+        private bool ValidarExistencia(string nombre)
+        {
+            string concepto = Combo.SelectedValue;
+            DataTable datos = this.Session["dt"] as DataTable;
+            DataView vista = datos.Copy().DefaultView;
+            vista.RowFilter = "Descripcion = '" + nombre + "' and Concepto = '" + concepto + "'";           
+
+            if (vista.Count > 0)
+                return true;
+            else
+                return false;
+        }
+
+        private void ExistenDatos(DataTable datos)
+        {
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                MvPagina.ActiveViewIndex = 0;
+            }
+            else
+            {
+                MvPagina.ActiveViewIndex = 0;
+            }
+        }
+
+        protected void ListaItems_RowDeleted(object sender, GridViewDeletedEventArgs e)
+        {
+            BindGrid();
+        }
+    }
+}
